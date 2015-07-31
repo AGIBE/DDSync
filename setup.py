@@ -16,6 +16,10 @@ setup(
       author_email = "peter.schaer@bve.be.ch",
       description = "Synchronisation aus GeoDBmeta in das DataDictionary der GeoDB",
       url = "http://www.be.ch/geoportal",
-      # TODO: entry_points einfügen (console_script)
+      entry_points={
+           'console_scripts': [
+                'DDSync = DDSync.Commandline:main'
+            ]         
+      }
       # https://pythonhosted.org/setuptools/setuptools.html#automatic-script-creation
 )
