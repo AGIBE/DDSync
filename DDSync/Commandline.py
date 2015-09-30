@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function, unicode_literals
+import DDSync.DDSync
 
 import argparse
 
@@ -11,6 +12,7 @@ def main():
     -v --version: gib die aktuelle Version aus
     -h --help: zeige die Hilfe an
     '''
+    DDSync.DDSync.sync_geoproduct("AVR")
 
 if __name__ == '__main__':
     main()
