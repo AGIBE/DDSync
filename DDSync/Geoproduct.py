@@ -16,14 +16,35 @@ class Geoproduct(object):
         
         self.is_valid = self.__validate()
     
+    def extract_dd_infos(self):
+   
+        xpatheval = etree.XPathEvaluator(self.xml, namespaces=DDSync.Config.config['xml_namespaces'])
+        
+        title_de = unicode(xpatheval("/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:title/gco:CharacterString/text()")[0])
+        print(title_de)
+        
+        title_fr = unicode(xpatheval("/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:title/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString/text()")[0])
+        print(title_fr)
+    
     def __get_uuid(self):
-        sql = "SELECT id_geodbmeta FROM gdbp.geoprodukte WHERE code='" + self.code + "'"
         uuid = ""
+
+        gdbp_schema = DDSync.Config.config['gdbp']['schema']
+        sql = "SELECT id_geodbmeta FROM " + gdbp_schema + ".geoprodukte WHERE code='" + self.code + "'"
+        gdbp_results = DDSync.Helper.read_from_gdbp(sql)
+        if len(gdbp_results) == 1:
+            uuid = gdbp_results[0][0]
+        
         return uuid
     
     def __get_gdbm_status(self):
-        sql = "SELECT status FROM vw_objects WHERE guid='" + self.uuid + "'"
         status = ""
+        
+        sql = "SELECT status FROM vw_objects WHERE guid='" + self.uuid + "'"
+        gdbm_results = DDSync.Helper.read_from_gdbm(sql)
+        if len(gdbm_results) == 1:
+            status = gdbm_results[0][0]
+        
         return status
     
     def __get_xml(self):
@@ -34,9 +55,14 @@ class Geoproduct(object):
         xml = ""
         xml_url = self.config['easysdi_proxy']['baseurl'] + self.uuid
         rsp = requests.get(xml_url)
-        xml_tree = etree.fromstring(rsp.text)
-        xml = rsp.text
-        return xml
+        # Der XML-String muss vom Typ bytes sein und nicht unicode
+        # Ansonsten gibt lxml einen Fehler aus
+        # http://lxml.de/parsing.html#python-unicode-strings
+        utf8_parser = etree.XMLParser(encoding='utf-8')
+        encoded_xml = rsp.text.encode('utf-8')
+        xml_tree = etree.fromstring(encoded_xml, utf8_parser)
+
+        return xml_tree
 
     def __validate(self):
         is_valid = True
@@ -53,7 +79,7 @@ class Geoproduct(object):
             is_valid = False
             self.validation_messages.append("Das Geoprodukt " + self.code + " (" + self.uuid + ") hat in GeoDBmeta nicht den Status 'Published'!")
             
-        if self.xml == "":
+        if self.xml == "".encode('utf-8'):
             is_valid = False
             self.validation_messages.append("Für das Geoprodukt " + self.code + " (" + self.uuid + ") konnte aus GeoDBmeta kein XML heruntergeladen werden!")
             
