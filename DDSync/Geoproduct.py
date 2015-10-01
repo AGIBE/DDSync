@@ -20,11 +20,23 @@ class Geoproduct(object):
    
         xpatheval = etree.XPathEvaluator(self.xml, namespaces=DDSync.Config.config['xml_namespaces'])
         
-        title_de = unicode(xpatheval("/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:title/gco:CharacterString/text()")[0])
-        print(title_de)
+        dd_schema = DDSync.Config.config['dd']['schema']
         
-        title_fr = unicode(xpatheval("/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:title/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString/text()")[0])
-        print(title_fr)
+        gpr_bezeichnung = self.code
+        gpr_bezeichnung_mittel_de = unicode(xpatheval("string(/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:title/gco:CharacterString)"))
+        gzs_bezeichnung_mittel_de = gpr_bezeichnung_mittel_de
+        gpr_bezeichnung_mittel_fr = unicode(xpatheval("string(/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:title/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString)"))
+        gzs_bezeichnung_mittel_fr = gpr_bezeichnung_mittel_fr
+        gpr_bezeichnung_lang_de = unicode(xpatheval("string(/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:otherCitationDetails/gco:CharacterString)"))
+        gzs_bezeichnung_lang_de = gpr_bezeichnung_lang_de
+        gpr_bezeichnung_lang_fr = unicode(xpatheval("string(/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:otherCitationDetails/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString/text())"))
+        gzs_bezeichnung_lang_fr = gpr_bezeichnung_lang_fr
+        
+        sql_tb_geoprodukt = "INSERT INTO " + dd_schema + ".TB_GEOPRODUKT (gpr_bezeichnung, gpr_bezeichnung_mittel_de, gpr_bezeichnung_mittel_fr, gpr_bezeichnung_lang_de, gpr_bezeichnung_lang_fr) VALUES ('%s', '%s', '%s', '%s', '%s')" % (gpr_bezeichnung, gpr_bezeichnung_mittel_de, gpr_bezeichnung_mittel_fr, gpr_bezeichnung_lang_de, gpr_bezeichnung_lang_fr)
+        sql_tb_geoprodukt_zeitstand = "INSERT INTO " + dd_schema + ".TB_GEOPRODUKT_ZEITSTAND (gzs_bezeichnung_mittel_de, gzs_bezeichnung_mittel_fr, gzs_bezeichnung_lang_de, gzs_bezeichung_lang_fr) VALUES ('%s', '%s', '%s', '%s')" % (gzs_bezeichnung_mittel_de, gzs_bezeichnung_mittel_fr, gzs_bezeichnung_lang_de, gzs_bezeichnung_lang_fr)
+        
+        print(sql_tb_geoprodukt)
+        print(sql_tb_geoprodukt_zeitstand)
     
     def __get_uuid(self):
         uuid = ""
