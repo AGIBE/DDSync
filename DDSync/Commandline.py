@@ -12,7 +12,7 @@ def main():
     -v --version: gib die aktuelle Version aus
     -h --help: zeige die Hilfe an
     '''
-    DDSync.DDSync.sync_geoproduct("AVR")
+    DDSync.DDSync.sync_geoproduct("DIPANU")
 
 if __name__ == '__main__':
     main()

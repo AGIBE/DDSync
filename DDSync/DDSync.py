@@ -17,5 +17,3 @@ def sync_geoproduct(code):
         print("Geoprodukt kann nicht synchronisiert werden!")
         for m in gpr.validation_messages:
             print(m)
-    else:
-        gpr.extract_dd_infos()

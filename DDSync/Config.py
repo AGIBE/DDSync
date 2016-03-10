@@ -12,5 +12,17 @@ definiert oder von hier aus geholt:
 - XPath-Angaben (inkl. DD-Name)
 - Logging (Logfile und farbigen Stream)
 '''
+def create_connection_string(identifier, config):
+    username = config[identifier]['username']
+    password = config[identifier]['password']
+    database = config[identifier]['database']
+    
+    connection_string = username + "/" + password + "@" + database
+    return connection_string
+
+
 config_filename = r"D:\\Daten\\repos\\DDSync\\config.ini"
 config = configobj.ConfigObj(config_filename, encoding="UTF-8")
+
+config['dd']['connection_string'] = create_connection_string('dd', config)
+config['gdbp']['connection_string'] = create_connection_string('dd', config)

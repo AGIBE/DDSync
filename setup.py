@@ -10,7 +10,7 @@ setup(
       packages = find_packages(),
       version = __version__,
       # Abhängigkeiten
-      install_requires = ["configobj==5.0.6", "cx-Oracle==5.1.3", "requests==2.7.0", "mysql-connector-python==2.0.4", "lxml==3.4.4"],
+      install_requires = ["configobj==5.0.6", "cx-Oracle==5.1.3", "requests==2.7.0", "mysql-connector-python==2.1.3", "lxml==3.4.4"],
       # PyPI metadata
       author = "Peter Schär",
       author_email = "peter.schaer@bve.be.ch",

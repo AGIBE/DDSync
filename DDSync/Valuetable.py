@@ -1,31 +1,23 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function, unicode_literals
+import DDSync.Config
+import DDSync.Helper
+from lxml import etree
 
-def process_valuetable(ezs_objectid, valuetable_list):
-    '''
-    Sammelt alle Informationen zu allen Wertetabellen
-    einer Ebene und verarbeitet diese zu den
-    notwendigen SQL-Statements. Die folgenden
-    Tabellen werden damit abgefüllt:
-    - TB_WERTETABELLE
 
-    Folgende Prozessschritte werden ausgeführt:
-    - valuetable_list parsen, Infos extrahieren
-    - SQL-Statement generieren
-    - xml parsen und DD-Felder extrahieren:
-    -- TB_WERTETABELLE.WTB_OBJECTID
-    -- TB_WERTETABELLE.EZS_OBJECTID
-    -- TB_WERTETABELLE.WTB_BEZEICHNUNG
-    -- TB_WERTETABELLE.WTB_BEZEICHNUNG_MITTEL_DE
-    -- TB_WERTETABELLE.WTB_BEZEICHNUNG_MITTEL_FR
-    -- TB_WERTETABELLE.WTB_IMPORTNAME
-    -- TB_WERTETABELLE.WTB_JOIN_FOREIGNKEY
-    -- TB_WERTETABELLE.WTB_JOIN_PRIMARYKEY
-    -- TB_WERTETABELLE.WTB_JOIN_TYP
-    -- TB_WERTETABELLE.WTB_AUTOLOAD (neues Feld in GeoDBmeta)
-    -- TB_WERTETABELLE.IMP_OBJECTID
-    
-    :param ezs_objectid:
-    :param valuetable_list:
-    '''
-    pass
+class Valuetable(object):
+    def __init__(self, valuetable_xml, attribute_name, ezs_objectid):
+        self.xml = valuetable_xml
+        self.attribute_name = attribute_name
+        self.ezs_objectid = ezs_objectid
+        
+        self.__extract_dd_infos()
+        
+    def __extract_dd_infos(self):
+        xpatheval = etree.XPathEvaluator(self.xml, namespaces=DDSync.Config.config['xml_namespaces'])
+        dd_schema = DDSync.Config.config['dd']['schema']
+
+        self.wtb_objectid = DDSync.Helper.get_dd_sequence_number()
+        self.wtb_bezeichnung = unicode(xpatheval("gmd:MD_CodeDomain/gmd:name/gco:CharacterString/text()"))
+        
+        print(self.wtb_bezeichnung)
