@@ -6,21 +6,28 @@ import DDSync.Layer
 import requests
 from lxml import etree
 import datetime
+import sys
 
 class Geoproduct(object):
     def __init__(self, code):
         self.config = DDSync.Config.config
         self.code = code
         self.uuid = self.__get_uuid()
+
         self.gdbm_status = self.__get_gdbm_status()
         self.gdbm_versionid = self.__get_gdbm_versionid()
-        self.validation_messages = []
+        
         self.xml = self.__get_xml()
-        
+
+        self.validation_messages = []
         self.is_valid = self.__validate()
-        
-        self.extract_dd_infos()
-        self.layers = self.__get_layers()
+
+        if self.is_valid:
+            self.extract_dd_infos()
+            self.layers = self.__get_layers()
+        else:
+            for msg in self.validation_messages:
+                print(msg)
     
     def extract_dd_infos(self):
    
@@ -57,7 +64,9 @@ class Geoproduct(object):
         self.gzs_zeitstand = self.__get_revision_date(dates) 
         self.gzs_jahr = unicode(xpatheval("string(/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/bee:version/bee:DD_DataDictionary/bee:versionYear/gco:Decimal)"))
         self.gzs_version = unicode(xpatheval("string(/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/bee:version/bee:DD_DataDictionary/bee:versionNumber/gco:Decimal)"))
-        self.gzs_klassifikation = unicode(xpatheval("string(/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:resourceConstraints/gmd:MD_LegalConstraints/gmd:otherConstraints/gco:CharacterString)"))[0]
+        self.gzs_klassifikation = ""
+        if len(xpatheval("string(/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:resourceConstraints/gmd:MD_LegalConstraints/gmd:otherConstraints/gco:CharacterString)")) > 0:
+            self.gzs_klassifikation = unicode(xpatheval("string(/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:resourceConstraints/gmd:MD_LegalConstraints/gmd:otherConstraints/gco:CharacterString)"))[0]
         self.gzs_bezeichnung_mittel_de = self.gpr_bezeichnung_mittel_de
         self.gzs_bezeichnung_mittel_fr = self.gpr_bezeichnung_mittel_fr
         self.gzs_bezeichnung_lang_de = self.gpr_bezeichnung_lang_de
@@ -86,33 +95,30 @@ class Geoproduct(object):
     
     def __get_uuid(self):
         uuid = ""
-
         gdbp_schema = DDSync.Config.config['gdbp']['schema']
         sql = "SELECT id_geodbmeta FROM " + gdbp_schema + ".geoprodukte WHERE code='" + self.code + "'"
         gdbp_results = DDSync.Helper.read_from_gdbp(sql)
         if len(gdbp_results) == 1:
             uuid = gdbp_results[0][0]
-        
+
         return uuid
     
     def __get_gdbm_status(self):
         status = ""
-        
         sql = "SELECT status FROM vw_objects WHERE guid='" + self.uuid + "'"
         gdbm_results = DDSync.Helper.read_from_gdbm(sql)
         if len(gdbm_results) == 1:
             status = gdbm_results[0][0]
-        
+
         return status
     
     def __get_gdbm_versionid(self):
         versionid = ""
-        
         sql = "SELECT versionid FROM vw_objects WHERE guid='" + self.uuid + "'"
         gdbm_results = DDSync.Helper.read_from_gdbm(sql)
         if len(gdbm_results) == 1:
             versionid = unicode(gdbm_results[0][0])
-        
+
         return versionid
     
     def __get_layers(self):
@@ -123,15 +129,14 @@ class Geoproduct(object):
             for gdbm_result in gdbm_results:
                 layer = DDSync.Layer.Layer(gdbm_result[0], gdbm_result[1], gdbm_result[2], self.gzs_objectid)
                 layers.append(layer)
+
         return layers
-            
     
     def __get_xml(self):
         '''
         Holt das XML vom EasySDI Proxy und parst es. Zurückgegeben
         wird das XML als String.
         '''
-        xml = ""
         xml_url = self.config['easysdi_proxy']['baseurl'] + self.uuid
         rsp = requests.get(xml_url)
         # Der XML-String muss vom Typ bytes sein und nicht unicode
@@ -164,6 +169,7 @@ class Geoproduct(object):
         return gpr_objectid
     
     def __get_the_objectid(self, category):
+        print("KATEGORIE:" + category)
         dd_category = self.config['category_mapping'][category]
         dd_schema = DDSync.Config.config['dd']['schema']
         sql = "SELECT the_objectid FROM " + dd_schema + ".tb_thema WHERE the_bezeichnung='" + dd_category + "'"
@@ -186,6 +192,10 @@ class Geoproduct(object):
         if self.gdbm_status <> "Published":
             is_valid = False
             self.validation_messages.append("Das Geoprodukt " + self.code + " (" + self.uuid + ") hat in GeoDBmeta nicht den Status 'Published'!")
+            
+        if self.gdbm_versionid == "":
+            is_valid = False
+            self.validation_messages.append("Für das Geoprodukt " + self.code + " (" + self.uuid + ") konnte in GeoDBmeta keine ObjectversionID gefunden werden.!")
             
         if self.xml == "".encode('utf-8'):
             is_valid = False

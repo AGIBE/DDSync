@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import DDSync.Helper
 import DDSync.Config
 import DDSync.Valuetable
+import DDSync.Legend
 import requests
 from lxml import etree
 
@@ -11,11 +12,13 @@ class Layer(object):
         self.config = DDSync.Config.config
         self.code = code
         self.uuid = uuid
+        print(self.uuid)
         self.gdbm_status = status
         self.gzs_objectid = gzs_objectid
 
         self.validation_messages = []
         self.valuetables = []
+        self.legends = []
         self.xml = self.__get_xml()
         
         self.is_valid = self.__validate()
@@ -50,16 +53,21 @@ class Layer(object):
       
         # TB_EBENE_ZEITSTAND
         self.ezs_objectid = DDSync.Helper.get_dd_sequence_number()
-        self.leg_objectid_de = "-99"
-        self.leg_objectid_fr = "-99"
+        self.leg_objectid_de = ""
+        self.leg_objectid_fr = ""
         self.ezs_reihenfolge = "0"
         self.imp_objectid = "14"
         
         # WERTETABELLEN
-        self.valuetables = self.__get_valuetables(xpatheval("/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:contentInfo/gmd:MD_FeatureCatalogueDescription/gmd:class/gmd:MD_Class/gmd:attribute/gmd:MD_Attribute"))
+        self.__get_valuetables(xpatheval("/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:contentInfo/gmd:MD_FeatureCatalogueDescription/gmd:class/gmd:MD_Class/gmd:attribute/gmd:MD_Attribute"))
+        
+        # LEGENDEN
+        self.__get_legends(xpatheval("/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:graphicOverview/gmd:MD_BrowseGraphic"))
+        print("Anzahl Legenden: " + unicode(len(self.legends)))
+        self.__get_standard_legends()
         
         sql_tb_ebene = "INSERT INTO %s.TB_EBENE (EBE_OBJECTID, DAT_OBJECTID, EBE_BEZEICHNUNG, EBE_BEZEICHNUNG_MITTEL_DE, EBE_BEZEICHNUNG_MITTEL_FR, EBE_BEZEICHNUNG_LANG_DE, EBE_BEZEICHNUNG_LANG_FR) VALUES (%s, %s, '%s', '%s', '%s', '%s', '%s')" % (dd_schema, self.ebe_objectid, self.dat_objectid, self.code, self.ebe_bezeichnung_mittel_de, self.ebe_bezeichnung_mittel_fr, self.ebe_bezeichnung_lang_de, self.ebe_bezeichnung_lang_fr)
-        sql_tb_ebene_zeitstand = "INSERT INTO %s.TB_EBENE_ZEITSTAND (EZS_OBJECTID, GZS_OBJECTID, EBE_OBJECTID, EZS_REIHENFOLGE, IMP_OBJECTID, UUID, EZS_BEZEICHNUNG_MITTEL_DE, EZS_BEZEICHNUNG_MITTEL_FR, EZS_BEZEICHNUNG_LANG_DE, EZS_BEZEICHNUNG_LANG_FR) VALUES (%s, %s, %s, %s, %s, '%s', '%s', '%s', '%s', '%s')" % (dd_schema, self.ezs_objectid, self.gzs_objectid, self.ebe_objectid, self.ezs_reihenfolge, self.imp_objectid, self.uuid, self.ebe_bezeichnung_mittel_de, self.ebe_bezeichnung_mittel_fr, self.ebe_bezeichnung_lang_de, self.ebe_bezeichnung_lang_fr)
+        sql_tb_ebene_zeitstand = "INSERT INTO %s.TB_EBENE_ZEITSTAND (EZS_OBJECTID, GZS_OBJECTID, EBE_OBJECTID, LEG_OBJECTID_DE, LEG_OBJECTID_FR, EZS_REIHENFOLGE, IMP_OBJECTID, UUID, EZS_BEZEICHNUNG_MITTEL_DE, EZS_BEZEICHNUNG_MITTEL_FR, EZS_BEZEICHNUNG_LANG_DE, EZS_BEZEICHNUNG_LANG_FR) VALUES (%s, %s, %s, %s, %s, %s, %s, '%s', '%s', '%s', '%s', '%s')" % (dd_schema, self.ezs_objectid, self.gzs_objectid, self.ebe_objectid, self.leg_objectid_de, self.leg_objectid_fr, self.ezs_reihenfolge, self.imp_objectid, self.uuid, self.ebe_bezeichnung_mittel_de, self.ebe_bezeichnung_mittel_fr, self.ebe_bezeichnung_lang_de, self.ebe_bezeichnung_lang_fr)
         
         print(sql_tb_ebene)
         print(sql_tb_ebene_zeitstand)
@@ -67,12 +75,28 @@ class Layer(object):
     def __get_valuetables(self, attributes):
         for attribute in attributes:
             xpatheval = etree.XPathEvaluator(attribute, namespaces=DDSync.Config.config['xml_namespaces'])
-            attribute_name = unicode(xpatheval("gmd:name/gco:CharacterString/text()")[0])
-            print(attribute_name)
-            valuetables = xpatheval("gmd:namedType/gmd:MD_CodeDomain")
-            for valuetable in valuetables:
-                self.valuetables.append(DDSync.Valuetable.Valuetable(valuetable, attribute_name, self.ezs_objectid))
+            if len(xpatheval("gmd:name/gco:CharacterString/text()")) > 0:
+                attribute_name = unicode(xpatheval("gmd:name/gco:CharacterString/text()")[0])
+                valuetables = xpatheval("gmd:namedType/gmd:MD_CodeDomain")
+                for valuetable in valuetables:
+                    self.valuetables.append(DDSync.Valuetable.Valuetable(valuetable, attribute_name, self.ezs_objectid))
+      
+    def __get_legends(self, legends_xml):
+        for legend in legends_xml:
+            self.legends.append(DDSync.Legend.Legend(legend, self.ezs_objectid))
             
+    def __get_standard_legends(self):
+        # Nur wenn es überhaupt eine Legende hat, wird sie ausgewählt.
+        if len(self.legends) > 0:
+            # Es wird erst einmal die allererste Legende als Standard-Legende ausgewählt.
+            self.leg_objectid_de = self.legends[0].leg_objectid_de
+            self.leg_objectid_fr = self.legends[0].leg_objectid_fr
+            # Sollte es eine Legende haben, die STANDARD heisst, dann wird diese als
+            # Standard-Legende gewählt.
+            for legend in self.legends:
+                if legend.leg_bezeichnung == 'STANDARD':
+                    self.leg_objectid_de = legend.leg_objectid_de
+                    self.leg_objectid_fr = legend.leg_objectid_fr
 
     def __get_ebe_objectid(self):
         ebe_objectid = "0"
