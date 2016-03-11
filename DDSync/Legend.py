@@ -1,22 +1,22 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function, unicode_literals
-import DDSync.Config
-import DDSync.Helper
 from lxml import etree
+import DDSync.helpers.sql_helper
 
 class Legend(object):
-    def __init__(self, legend_xml, ezs_objectid):
+    def __init__(self, legend_xml, ezs_objectid, config):
+        self.config = config
         self.xml = legend_xml
         self.ezs_objectid = ezs_objectid
         
         self.__extract_dd_infos()
         
     def __extract_dd_infos(self):
-        xpatheval = etree.XPathEvaluator(self.xml, namespaces=DDSync.Config.config['xml_namespaces'])
-        dd_schema = DDSync.Config.config['dd']['schema']
+        xpatheval = etree.XPathEvaluator(self.xml, namespaces=self.config['XML_NAMESPACES'])
+        dd_schema = self.config['DD']['schema']
         
-        self.leg_objectid_de = DDSync.Helper.get_dd_sequence_number()
-        self.leg_objectid_fr = DDSync.Helper.get_dd_sequence_number()
+        self.leg_objectid_de = DDSync.helpers.sql_helper.get_dd_sequence_number(self.config)
+        self.leg_objectid_fr = DDSync.helpers.sql_helper.get_dd_sequence_number(self.config)
         
         self.leg_bezeichnung = unicode(xpatheval("string(gmd:fileName/gco:CharacterString)"))
         

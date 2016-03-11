@@ -2,6 +2,7 @@
 # übernommen aus: https://pythonhosted.org/setuptools/setuptools.html#id24
 import ez_setup
 from DDSync import __version__
+
 ez_setup.use_setuptools()
 
 from setuptools import setup, find_packages
@@ -10,7 +11,7 @@ setup(
       packages = find_packages(),
       version = __version__,
       # Abhängigkeiten
-      install_requires = ["configobj==5.0.6", "cx-Oracle==5.1.3", "requests==2.7.0", "mysql-connector-python==2.1.3", "lxml==3.4.4"],
+      install_requires = ["configobj==5.0.6", "cx-Oracle==5.1.3", "requests==2.7.0", "mysql-connector-python==2.1.3", "lxml==3.4.4", "chromalog==1.0.4", "python-keyczar==0.715"],
       # PyPI metadata
       author = "Peter Schär",
       author_email = "peter.schaer@bve.be.ch",
@@ -18,7 +19,7 @@ setup(
       url = "http://www.be.ch/geoportal",
       entry_points={
            'console_scripts': [
-                'DDSync = DDSync.Commandline:main'
+                'DDSync = DDSync.helpers.commandline_helper:main'
             ]         
       }
       # https://pythonhosted.org/setuptools/setuptools.html#automatic-script-creation

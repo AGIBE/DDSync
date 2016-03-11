@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function, unicode_literals
-import DDSync.Helper
-import DDSync.Config
+import DDSync.helpers.config_helper
+import DDSync.helpers.sql_helper
 import DDSync.Layer
 import requests
 from lxml import etree
@@ -10,7 +10,7 @@ import sys
 
 class Geoproduct(object):
     def __init__(self, code):
-        self.config = DDSync.Config.config
+        self.config = DDSync.helpers.config_helper.get_config()
         self.code = code
         self.uuid = self.__get_uuid()
 
@@ -31,8 +31,8 @@ class Geoproduct(object):
     
     def extract_dd_infos(self):
    
-        xpatheval = etree.XPathEvaluator(self.xml, namespaces=DDSync.Config.config['xml_namespaces'])
-        dd_schema = DDSync.Config.config['dd']['schema']
+        xpatheval = etree.XPathEvaluator(self.xml, namespaces=self.config['XML_NAMESPACES'])
+        dd_schema = self.config['DD']['schema']
         
         # TB_GEOPRODUKT
         self.gpr_objectid = self.__get_gpr_objectid()
@@ -59,7 +59,7 @@ class Geoproduct(object):
         print("GPR_BEZEICHNUNG_LANG_FR: " + self.gpr_bezeichnung_lang_fr)
         
         # TB_GEOPRODUKT_ZEITSTAND
-        self.gzs_objectid = DDSync.Helper.get_dd_sequence_number()
+        self.gzs_objectid = DDSync.helpers.sql_helper.get_dd_sequence_number(self.config)
         dates = xpatheval("/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:date")
         self.gzs_zeitstand = self.__get_revision_date(dates) 
         self.gzs_jahr = unicode(xpatheval("string(/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/bee:version/bee:DD_DataDictionary/bee:versionYear/gco:Decimal)"))
@@ -95,9 +95,9 @@ class Geoproduct(object):
     
     def __get_uuid(self):
         uuid = ""
-        gdbp_schema = DDSync.Config.config['gdbp']['schema']
+        gdbp_schema = self.config['GDBP']['schema']
         sql = "SELECT id_geodbmeta FROM " + gdbp_schema + ".geoprodukte WHERE code='" + self.code + "'"
-        gdbp_results = DDSync.Helper.read_from_gdbp(sql)
+        gdbp_results = DDSync.helpers.sql_helper.readOracleSQL(self.config['GDBP']['connection_string'], sql)
         if len(gdbp_results) == 1:
             uuid = gdbp_results[0][0]
 
@@ -106,7 +106,7 @@ class Geoproduct(object):
     def __get_gdbm_status(self):
         status = ""
         sql = "SELECT status FROM vw_objects WHERE guid='" + self.uuid + "'"
-        gdbm_results = DDSync.Helper.read_from_gdbm(sql)
+        gdbm_results = DDSync.helpers.sql_helper.readMySQL(sql, self.config)
         if len(gdbm_results) == 1:
             status = gdbm_results[0][0]
 
@@ -115,7 +115,7 @@ class Geoproduct(object):
     def __get_gdbm_versionid(self):
         versionid = ""
         sql = "SELECT versionid FROM vw_objects WHERE guid='" + self.uuid + "'"
-        gdbm_results = DDSync.Helper.read_from_gdbm(sql)
+        gdbm_results = DDSync.helpers.sql_helper.readMySQL(sql, self.config)
         if len(gdbm_results) == 1:
             versionid = unicode(gdbm_results[0][0])
 
@@ -124,10 +124,10 @@ class Geoproduct(object):
     def __get_layers(self):
         layers = []
         sql = "SELECT code, guid, status FROM vw_objects WHERE versionid in (SELECT child_id FROM jos_sdi_objectversionlink WHERE parent_id=" + self.gdbm_versionid + ") ORDER BY code asc"
-        gdbm_results = DDSync.Helper.read_from_gdbm(sql)
+        gdbm_results = DDSync.helpers.sql_helper.readMySQL(sql, self.config)
         if len(gdbm_results) > 0:
             for gdbm_result in gdbm_results:
-                layer = DDSync.Layer.Layer(gdbm_result[0], gdbm_result[1], gdbm_result[2], self.gzs_objectid)
+                layer = DDSync.Layer.Layer(gdbm_result[0], gdbm_result[1], gdbm_result[2], self.gzs_objectid, self.config)
                 layers.append(layer)
 
         return layers
@@ -137,7 +137,7 @@ class Geoproduct(object):
         Holt das XML vom EasySDI Proxy und parst es. Zurückgegeben
         wird das XML als String.
         '''
-        xml_url = self.config['easysdi_proxy']['baseurl'] + self.uuid
+        xml_url = self.config['EASYSDI_PROXY']['baseurl'] + self.uuid
         rsp = requests.get(xml_url)
         # Der XML-String muss vom Typ bytes sein und nicht unicode
         # Ansonsten gibt lxml einen Fehler aus
@@ -151,7 +151,7 @@ class Geoproduct(object):
     def __get_revision_date(self, dates):
         revision_date = ""
         for date in dates:
-            xpatheval = etree.XPathEvaluator(date, namespaces=DDSync.Config.config['xml_namespaces'])
+            xpatheval = etree.XPathEvaluator(date, namespaces=self.config['XML_NAMESPACES'])
             dateType = unicode(xpatheval("gmd:CI_Date/gmd:dateType/gmd:CI_DateTypeCode/@codeListValue")[0])
             if dateType == 'revision':
                 revision_date = unicode(xpatheval("gmd:CI_Date/gmd:date/gco:Date/text()")[0])
@@ -160,10 +160,10 @@ class Geoproduct(object):
     
     def __get_gpr_objectid(self):
         gpr_objectid = "0"
-        schema = DDSync.Config.config['dd']['schema']
+        schema = self.config['DD']['schema']
         sql = "SELECT gpr_objectid FROM " + schema + ".tb_geoprodukt WHERE gpr_bezeichnung = '" + self.code + "'"
-        connection_string = self.config['dd']['connection_string']
-        res = DDSync.Helper.readOracleSQL(connection_string, sql)
+        connection_string = self.config['DD']['connection_string']
+        res = DDSync.helpers.sql_helper.readOracleSQL(connection_string, sql)
         if len(res) == 1:
             gpr_objectid = unicode(res[0][0])
         return gpr_objectid
@@ -171,17 +171,17 @@ class Geoproduct(object):
     def __get_the_objectid(self, category):
         print("KATEGORIE:" + category)
         dd_category = self.config['category_mapping'][category]
-        dd_schema = DDSync.Config.config['dd']['schema']
+        dd_schema = self.config['DD']['schema']
         sql = "SELECT the_objectid FROM " + dd_schema + ".tb_thema WHERE the_bezeichnung='" + dd_category + "'"
-        connection_string = self.config['dd']['connection_string']
-        res = DDSync.Helper.readOracleSQL(connection_string, sql)
+        connection_string = self.config['DD']['connection_string']
+        res = DDSync.helpers.sql_helper.readOracleSQL(connection_string, sql)
         the_objectid =  unicode(res[0][0])
         return the_objectid
 
     def __validate(self):
         is_valid = True
         
-        if self.code in DDSync.Helper.get_syncable_codes_from_gdbp():
+        if self.code in DDSync.helpers.sql_helper.get_syncable_codes_from_gdbp(self.config):
             is_valid = False
             self.validation_messages.append("Das Geoprodukt " + self.code + " ist in GeoDBProzess nicht für den Import freigegeben!")
         

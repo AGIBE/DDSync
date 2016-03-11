@@ -1,18 +1,17 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function, unicode_literals
-import DDSync.Helper
-import DDSync.Config
 import DDSync.Valuetable
 import DDSync.Legend
+import DDSync.helpers.sql_helper
 import requests
 from lxml import etree
 
 class Layer(object):
-    def __init__(self, code, uuid, status, gzs_objectid):
-        self.config = DDSync.Config.config
+    def __init__(self, code, uuid, status, gzs_objectid, config):
+        self.config = config
         self.code = code
         self.uuid = uuid
-        print(self.uuid)
+
         self.gdbm_status = status
         self.gzs_objectid = gzs_objectid
 
@@ -26,8 +25,8 @@ class Layer(object):
         
         
     def extract_dd_infos(self):
-        xpatheval = etree.XPathEvaluator(self.xml, namespaces=DDSync.Config.config['xml_namespaces'])
-        dd_schema = DDSync.Config.config['dd']['schema']
+        xpatheval = etree.XPathEvaluator(self.xml, namespaces=self.config['XML_NAMESPACES'])
+        dd_schema = self.config['DD']['schema']
 
         # TB_EBENE
         self.ebe_objectid = self.__get_ebe_objectid()
@@ -52,7 +51,7 @@ class Layer(object):
         print("EBE_BEZEICHNUNG_LANG_FR: " + self.ebe_bezeichnung_lang_fr)
       
         # TB_EBENE_ZEITSTAND
-        self.ezs_objectid = DDSync.Helper.get_dd_sequence_number()
+        self.ezs_objectid = DDSync.helpers.sql_helper.get_dd_sequence_number(self.config)
         self.leg_objectid_de = ""
         self.leg_objectid_fr = ""
         self.ezs_reihenfolge = "0"
@@ -74,16 +73,16 @@ class Layer(object):
         
     def __get_valuetables(self, attributes):
         for attribute in attributes:
-            xpatheval = etree.XPathEvaluator(attribute, namespaces=DDSync.Config.config['xml_namespaces'])
+            xpatheval = etree.XPathEvaluator(attribute, namespaces=self.config['XML_NAMESPACES'])
             if len(xpatheval("gmd:name/gco:CharacterString/text()")) > 0:
                 attribute_name = unicode(xpatheval("gmd:name/gco:CharacterString/text()")[0])
                 valuetables = xpatheval("gmd:namedType/gmd:MD_CodeDomain")
                 for valuetable in valuetables:
-                    self.valuetables.append(DDSync.Valuetable.Valuetable(valuetable, attribute_name, self.ezs_objectid))
+                    self.valuetables.append(DDSync.Valuetable.Valuetable(valuetable, attribute_name, self.ezs_objectid, self.config))
       
     def __get_legends(self, legends_xml):
         for legend in legends_xml:
-            self.legends.append(DDSync.Legend.Legend(legend, self.ezs_objectid))
+            self.legends.append(DDSync.Legend.Legend(legend, self.ezs_objectid, self.config))
             
     def __get_standard_legends(self):
         # Nur wenn es überhaupt eine Legende hat, wird sie ausgewählt.
@@ -100,20 +99,20 @@ class Layer(object):
 
     def __get_ebe_objectid(self):
         ebe_objectid = "0"
-        schema = DDSync.Config.config['dd']['schema']
+        schema = self.config['DD']['schema']
         sql = "SELECT ebe_objectid FROM " + schema + ".tb_ebene WHERE ebe_bezeichnung = '" + self.code + "'"
-        connection_string = self.config['dd']['connection_string']
-        res = DDSync.Helper.readOracleSQL(connection_string, sql)
+        connection_string = self.config['DD']['connection_string']
+        res = DDSync.helpers.sql_helper.readOracleSQL(connection_string, sql)
         if len(res) == 1:
             ebe_objectid = unicode(res[0][0])
         return ebe_objectid
 
     def __get_dat_objectid(self, datatype):
-        dd_datatype = self.config['datatype_mapping'][datatype]
-        dd_schema = DDSync.Config.config['dd']['schema']
+        dd_datatype = self.config['DATATYPE_MAPPING'][datatype]
+        dd_schema = self.config['DD']['schema']
         sql = "SELECT dat_objectid FROM " + dd_schema + ".tb_datentyp WHERE dat_bezeichnung_de='" + dd_datatype + "'"
-        connection_string = self.config['dd']['connection_string']
-        res = DDSync.Helper.readOracleSQL(connection_string, sql)
+        connection_string = self.config['DD']['connection_string']
+        res = DDSync.helpers.sql_helper.readOracleSQL(connection_string, sql)
         dat_objectid =  unicode(res[0][0])
         return dat_objectid
 
@@ -123,7 +122,7 @@ class Layer(object):
         wird das XML als String.
         '''
         xml = ""
-        xml_url = self.config['easysdi_proxy']['baseurl'] + self.uuid
+        xml_url = self.config['EASYSDI_PROXY']['baseurl'] + self.uuid
         rsp = requests.get(xml_url)
         # Der XML-String muss vom Typ bytes sein und nicht unicode
         # Ansonsten gibt lxml einen Fehler aus
@@ -149,54 +148,4 @@ class Layer(object):
             is_valid = False
             self.validation_messages.append("Für das Geoprodukt " + self.code + " (" + self.uuid + ") konnte aus GeoDBmeta kein XML heruntergeladen werden!")
             
-        return is_valid    
-
-
-def process_ebene(uuid, gzs_objectid):
-    '''
-    Sammelt alle Informationen zu einer Ebene
-    und verarbeitet diese zu den notwendigen SQL-
-    Statements. Die folgenden Tabellen werden damit
-    abgefüllt:
-    - TB_EBENE
-    - TB_EBENE_ZEITSTAND
-
-    Folgende Prozessschritte werden ausgeführt:
-    - alle EasySDI-Infos ermitteln
-    - xml holen
-    - prüfen, ob EasySDI-Status=published (wenn nicht: mit Fehler abbrechen)
-    - prüfen, ob neue Ebene oder Aktualisierung
-    - EBE_OBJECTID ermitteln:
-    -- entweder: TB_EBENE.EBE_OBJECTID bei bestehender Ebene
-    -- oder: nächster Wert in der Geo7-Sequenz bei neuer Ebene
-    - EZS_OBJECTID ermitteln (nächster Wert in der Geo7-Sequenz)
-    - EZS_Reihenfolge aus MXD auslesen
-    - xml parsen und DD-Felder extrahieren:
-    -- TB_EBENE.EBE_OBJECTID
-    -- TB_EBENE.DAT_OBJECTID
-    -- TB_EBENE.EBE_BEZEICHNUNG
-    -- TB_EBENE.EBE_BEZEICHNUNG_MITTEL_DE (entfällt bald)
-    -- TB_EBENE.EBE_BEZEICHNUNG_LANG_DE (entfällt bald)
-    -- TB_EBENE.EBE_BEZEICHNUNG_MITTEL_FR (entfällt bald)
-    -- TB_EBENE.EBE_BEZEICHNUNG_LANG_FR (entfällt bald)
-    -- TB_EBENE_ZEITSTAND.EZS_OBJECTID
-    -- TB_EBENE_ZEITSTAND.GZS_OBJECTID
-    -- TB_EBENE_ZEITSTAND.EBE_OBJECTID
-    -- TB_EBENE_ZEITSTAND.LEG_OBJECTID_DE
-    -- TB_EBENE_ZEITSTAND.LEG_OBJECTID_FR
-    -- TB_EBENE_ZEITSTAND.EZS_IMPORTNAME (entfällt?)
-    -- TB_EBENE_ZEITSTAND.EZS_REIHENFOLGE
-    -- TB_EBENE_ZEITSTAND.IMP_OBJECTID (entfällt?)
-    -- TB_EBENE_ZEITSTAND.UUID
-    -- TB_EBENE_ZEITSTAND.URL1 (werden die noch benötigt?)
-    -- TB_EBENE_ZEITSTAND.URL2 (werden die noch benötigt?)
-    -- TB_EBENE_ZEITSTAND.EZS_BEZEICHNUNG_MITTEL_DE
-    -- TB_EBENE_ZEITSTAND.EZS_BEZEICHNUNG_LANG_DE
-    -- TB_EBENE_ZEITSTAND.EZS_BEZEICHNUNG_MITTEL_FR
-    -- TB_EBENE_ZEITSTAND.EZS_BEZEICHNUNG_LANG_FR
-    -- TB_EBENE_ZEITSTAND.LV95_TRANSF_METHODE (nötig?)
-    -- TB_EBENE_ZEITSTAND.LV95_TRANSF_DS (nötig?)
-
-    :param uuid: UUID der zu prozessierenden Ebene
-    :param gzs_objectid: gzs_objectid des Geoprodukts
-    '''
+        return is_valid
