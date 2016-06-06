@@ -33,13 +33,10 @@ class Geoproduct(object):
             self.logger.info("DD-Infos werden zusammengetragen.")
             self.extract_dd_infos()
             self.layers = self.__get_layers()
+            self.__collect_sql_statements()
         else:
             for msg in self.validation_messages:
-                self.logger.info(msg)
-                
-        self.__collect_sql_statements()
-        for sql in self.sql_statements:
-            print(sql)
+                self.logger.error(msg)
     
     def extract_dd_infos(self):
    
@@ -76,9 +73,11 @@ class Geoproduct(object):
         self.gzs_bezeichnung_lang_de = self.gpr_bezeichnung_lang_de
         self.gzs_bezeichnung_lang_fr = self.gpr_bezeichnung_lang_fr
         self.sta_objectid = "1"
-        
-        self.sql_statements.append("INSERT INTO %s.TB_GEOPRODUKT (gpr_bezeichnung, gpr_bezeichnung_mittel_de, gpr_bezeichnung_mittel_fr, gpr_bezeichnung_lang_de, gpr_bezeichnung_lang_fr) VALUES ('%s', '%s', '%s', '%s', '%s');" % (dd_schema, self.gpr_bezeichnung, self.gpr_bezeichnung_mittel_de, self.gpr_bezeichnung_mittel_fr, self.gpr_bezeichnung_lang_de, self.gpr_bezeichnung_lang_fr))
-        self.sql_statements.append("INSERT INTO %s.TB_GP_THEMA (gpr_objectid, the_objectid) VALUES (%s, %s);" % (dd_schema, self.gpr_objectid, self.the_objectid))
+
+        # Wenn es das Geoprodukt (TB_GEOPRODUKT) schon gibt, dann muss es nicht aktualisiert werden.
+        if not self.gpr_exists:        
+            self.sql_statements.append("INSERT INTO %s.TB_GEOPRODUKT (gpr_bezeichnung, gpr_bezeichnung_mittel_de, gpr_bezeichnung_mittel_fr, gpr_bezeichnung_lang_de, gpr_bezeichnung_lang_fr) VALUES ('%s', '%s', '%s', '%s', '%s');" % (dd_schema, self.gpr_bezeichnung, self.gpr_bezeichnung_mittel_de, self.gpr_bezeichnung_mittel_fr, self.gpr_bezeichnung_lang_de, self.gpr_bezeichnung_lang_fr))
+            self.sql_statements.append("INSERT INTO %s.TB_GP_THEMA (gpr_objectid, the_objectid) VALUES (%s, %s);" % (dd_schema, self.gpr_objectid, self.the_objectid))
         self.sql_statements.append("INSERT INTO %s.TB_GEOPRODUKT_ZEITSTAND (gzs_bezeichnung_mittel_de, gzs_bezeichnung_mittel_fr, gzs_bezeichnung_lang_de, gzs_bezeichung_lang_fr) VALUES ('%s', '%s', '%s', '%s');" % (dd_schema, self.gzs_bezeichnung_mittel_de, self.gzs_bezeichnung_mittel_fr, self.gzs_bezeichnung_lang_de, self.gzs_bezeichnung_lang_fr))
         
     def __get_uuid(self):
@@ -168,7 +167,7 @@ class Geoproduct(object):
     def __validate(self):
         is_valid = True
         
-        if self.code in DDSync.helpers.sql_helper.get_syncable_codes_from_gdbp(self.config):
+        if self.code not in DDSync.helpers.sql_helper.get_syncable_codes_from_gdbp(self.config):
             is_valid = False
             self.validation_messages.append("Das Geoprodukt " + self.code + " ist in GeoDBProzess nicht für den Import freigegeben!")
         

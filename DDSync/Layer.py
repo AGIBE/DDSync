@@ -14,6 +14,8 @@ class Layer(object):
 
         self.gdbm_status = status
         self.gzs_objectid = gzs_objectid
+        
+        self.logger = self.config['LOGGING']['logger']
 
         self.validation_messages = []
         self.valuetables = []
@@ -23,9 +25,13 @@ class Layer(object):
         self.sql_statements= []
         
         self.is_valid = self.__validate()
-        self.extract_dd_infos()
-        
-        self.__collect_sql_statements()
+        if self.is_valid:
+            self.logger.info("DD-Infos der Ebene " + self.code + " werden zusammengetragen.")
+            self.extract_dd_infos()
+            self.__collect_sql_statements()
+        else:
+            for msg in self.validation_messages:
+                self.logger.error(msg)
         
     def extract_dd_infos(self):
         xpatheval = etree.XPathEvaluator(self.xml, namespaces=self.config['XML_NAMESPACES'])
@@ -60,7 +66,9 @@ class Layer(object):
         self.__get_legends(xpatheval("/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:graphicOverview/gmd:MD_BrowseGraphic"))
         self.__get_standard_legends()
         
-        self.sql_statements.append("INSERT INTO %s.TB_EBENE (EBE_OBJECTID, DAT_OBJECTID, EBE_BEZEICHNUNG, EBE_BEZEICHNUNG_MITTEL_DE, EBE_BEZEICHNUNG_MITTEL_FR, EBE_BEZEICHNUNG_LANG_DE, EBE_BEZEICHNUNG_LANG_FR) VALUES (%s, %s, '%s', '%s', '%s', '%s', '%s');" % (dd_schema, self.ebe_objectid, self.dat_objectid, self.code, self.ebe_bezeichnung_mittel_de, self.ebe_bezeichnung_mittel_fr, self.ebe_bezeichnung_lang_de, self.ebe_bezeichnung_lang_fr))
+        # Wenn es die Ebene (TB_EBENE) schon gibt, dann muss sie nicht aktualisiert werden.
+        if not self.ebe_exists:
+            self.sql_statements.append("INSERT INTO %s.TB_EBENE (EBE_OBJECTID, DAT_OBJECTID, EBE_BEZEICHNUNG, EBE_BEZEICHNUNG_MITTEL_DE, EBE_BEZEICHNUNG_MITTEL_FR, EBE_BEZEICHNUNG_LANG_DE, EBE_BEZEICHNUNG_LANG_FR) VALUES (%s, %s, '%s', '%s', '%s', '%s', '%s');" % (dd_schema, self.ebe_objectid, self.dat_objectid, self.code, self.ebe_bezeichnung_mittel_de, self.ebe_bezeichnung_mittel_fr, self.ebe_bezeichnung_lang_de, self.ebe_bezeichnung_lang_fr))
         self.sql_statements.append("INSERT INTO %s.TB_EBENE_ZEITSTAND (EZS_OBJECTID, GZS_OBJECTID, EBE_OBJECTID, LEG_OBJECTID_DE, LEG_OBJECTID_FR, EZS_REIHENFOLGE, IMP_OBJECTID, UUID, EZS_BEZEICHNUNG_MITTEL_DE, EZS_BEZEICHNUNG_MITTEL_FR, EZS_BEZEICHNUNG_LANG_DE, EZS_BEZEICHNUNG_LANG_FR, EZS_IMPORTNAME) VALUES (%s, %s, %s, %s, %s, %s, %s, '%s', '%s', '%s', '%s', '%s', '%s');" % (dd_schema, self.ezs_objectid, self.gzs_objectid, self.ebe_objectid, self.leg_objectid_de, self.leg_objectid_fr, self.ezs_reihenfolge, self.imp_objectid, self.uuid, self.ebe_bezeichnung_mittel_de, self.ebe_bezeichnung_mittel_fr, self.ebe_bezeichnung_lang_de, self.ebe_bezeichnung_lang_fr, self.ezs_importname))
         
     def __get_valuetables(self, attributes):

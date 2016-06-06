@@ -9,6 +9,8 @@ class Legend(object):
         self.xml = legend_xml
         self.ezs_objectid = ezs_objectid
         
+        self.logger = self.config['LOGGING']['logger']
+        
         self.sql_statements = []
         
         self.__extract_dd_infos()
@@ -21,6 +23,7 @@ class Legend(object):
         self.leg_objectid_fr = DDSync.helpers.sql_helper.get_dd_sequence_number(self.config)
         
         self.leg_bezeichnung = unicode(xpatheval("string(gmd:fileName/gco:CharacterString)"))
+        self.logger.info("DD-Infos der Legende " + self.leg_bezeichnung + " werden zusammengetragen.")
         
         # Legende deutsch
         self.leg_bezeichnung_mittel_de_de = unicode(xpatheval("string(bee:legendTitleDE/gco:CharacterString)"))

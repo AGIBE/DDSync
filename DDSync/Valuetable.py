@@ -11,6 +11,8 @@ class Valuetable(object):
         self.wtb_join_foreignkey = attribute_name
         self.ezs_objectid = ezs_objectid
         
+        self.logger = self.config['LOGGING']['logger']
+        
         self.sql_statements = []
         
         self.__extract_dd_infos()
@@ -21,6 +23,7 @@ class Valuetable(object):
 
         self.wtb_objectid = DDSync.helpers.sql_helper.get_dd_sequence_number(self.config)
         self.wtb_bezeichnung = unicode(xpatheval("string(gmd:name/gco:CharacterString)"))
+        self.logger.info("DD-Infos der Wertetabelle " + self.wtb_bezeichnung + " werden zusammengetragen.")
         self.wtb_bezeichnung_mittel_de = unicode(xpatheval("string(gmd:description/gco:CharacterString)"))
         self.wtb_bezeichnung_mittel_fr = unicode(xpatheval("string(gmd:description/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale = '#FR'])"))
         self.wtb_join_primarykey = unicode(xpatheval("string(bee:primaryKey/gco:CharacterString)"))
