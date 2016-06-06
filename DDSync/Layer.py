@@ -20,9 +20,12 @@ class Layer(object):
         self.legends = []
         self.xml = self.__get_xml()
         
+        self.sql_statements= []
+        
         self.is_valid = self.__validate()
         self.extract_dd_infos()
         
+        self.__collect_sql_statements()
         
     def extract_dd_infos(self):
         xpatheval = etree.XPathEvaluator(self.xml, namespaces=self.config['XML_NAMESPACES'])
@@ -32,7 +35,7 @@ class Layer(object):
         self.ebe_objectid = self.__get_ebe_objectid()
         if self.ebe_objectid == "0":
             self.ebe_exists = False
-            self.ebe_objectid = DDSync.Helper.get_dd_sequence_number()
+            self.ebe_objectid = DDSync.helpers.sql_helper.get_dd_sequence_number(self.config)
         else:
             self.ebe_exists = True
         datatype = unicode(xpatheval("string(/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/bee:dataType/bee:dataTypecode/@codeListValue)"))
@@ -42,34 +45,23 @@ class Layer(object):
         self.ebe_bezeichnung_lang_de = unicode(xpatheval("string(/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:otherCitationDetails/gco:CharacterString)"))
         self.ebe_bezeichnung_lang_fr = unicode(xpatheval("string(/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:otherCitationDetails/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale = '#FR'])"))
         
-        print("EBE_OBJECTID: " + self.ebe_objectid)
-        print("DAT_OBJECTID: " + self.dat_objectid)
-        print("EBE_BEZEICHNUNG: " + self.code)
-        print("EBE_BEZEICHNUNG_MITTEL_DE: " + self.ebe_bezeichnung_mittel_de)
-        print("EBE_BEZEICHNUNG_MITTEL_FR: " + self.ebe_bezeichnung_mittel_fr)
-        print("EBE_BEZEICHNUNG_LANG_DE: " + self.ebe_bezeichnung_lang_de)
-        print("EBE_BEZEICHNUNG_LANG_FR: " + self.ebe_bezeichnung_lang_fr)
-      
         # TB_EBENE_ZEITSTAND
         self.ezs_objectid = DDSync.helpers.sql_helper.get_dd_sequence_number(self.config)
         self.leg_objectid_de = ""
         self.leg_objectid_fr = ""
         self.ezs_reihenfolge = "0"
         self.imp_objectid = "14"
+        self.ezs_importname = "x"
         
         # WERTETABELLEN
         self.__get_valuetables(xpatheval("/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:contentInfo/gmd:MD_FeatureCatalogueDescription/gmd:class/gmd:MD_Class/gmd:attribute/gmd:MD_Attribute"))
         
         # LEGENDEN
         self.__get_legends(xpatheval("/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:graphicOverview/gmd:MD_BrowseGraphic"))
-        print("Anzahl Legenden: " + unicode(len(self.legends)))
         self.__get_standard_legends()
         
-        sql_tb_ebene = "INSERT INTO %s.TB_EBENE (EBE_OBJECTID, DAT_OBJECTID, EBE_BEZEICHNUNG, EBE_BEZEICHNUNG_MITTEL_DE, EBE_BEZEICHNUNG_MITTEL_FR, EBE_BEZEICHNUNG_LANG_DE, EBE_BEZEICHNUNG_LANG_FR) VALUES (%s, %s, '%s', '%s', '%s', '%s', '%s')" % (dd_schema, self.ebe_objectid, self.dat_objectid, self.code, self.ebe_bezeichnung_mittel_de, self.ebe_bezeichnung_mittel_fr, self.ebe_bezeichnung_lang_de, self.ebe_bezeichnung_lang_fr)
-        sql_tb_ebene_zeitstand = "INSERT INTO %s.TB_EBENE_ZEITSTAND (EZS_OBJECTID, GZS_OBJECTID, EBE_OBJECTID, LEG_OBJECTID_DE, LEG_OBJECTID_FR, EZS_REIHENFOLGE, IMP_OBJECTID, UUID, EZS_BEZEICHNUNG_MITTEL_DE, EZS_BEZEICHNUNG_MITTEL_FR, EZS_BEZEICHNUNG_LANG_DE, EZS_BEZEICHNUNG_LANG_FR) VALUES (%s, %s, %s, %s, %s, %s, %s, '%s', '%s', '%s', '%s', '%s')" % (dd_schema, self.ezs_objectid, self.gzs_objectid, self.ebe_objectid, self.leg_objectid_de, self.leg_objectid_fr, self.ezs_reihenfolge, self.imp_objectid, self.uuid, self.ebe_bezeichnung_mittel_de, self.ebe_bezeichnung_mittel_fr, self.ebe_bezeichnung_lang_de, self.ebe_bezeichnung_lang_fr)
-        
-        print(sql_tb_ebene)
-        print(sql_tb_ebene_zeitstand)
+        self.sql_statements.append("INSERT INTO %s.TB_EBENE (EBE_OBJECTID, DAT_OBJECTID, EBE_BEZEICHNUNG, EBE_BEZEICHNUNG_MITTEL_DE, EBE_BEZEICHNUNG_MITTEL_FR, EBE_BEZEICHNUNG_LANG_DE, EBE_BEZEICHNUNG_LANG_FR) VALUES (%s, %s, '%s', '%s', '%s', '%s', '%s');" % (dd_schema, self.ebe_objectid, self.dat_objectid, self.code, self.ebe_bezeichnung_mittel_de, self.ebe_bezeichnung_mittel_fr, self.ebe_bezeichnung_lang_de, self.ebe_bezeichnung_lang_fr))
+        self.sql_statements.append("INSERT INTO %s.TB_EBENE_ZEITSTAND (EZS_OBJECTID, GZS_OBJECTID, EBE_OBJECTID, LEG_OBJECTID_DE, LEG_OBJECTID_FR, EZS_REIHENFOLGE, IMP_OBJECTID, UUID, EZS_BEZEICHNUNG_MITTEL_DE, EZS_BEZEICHNUNG_MITTEL_FR, EZS_BEZEICHNUNG_LANG_DE, EZS_BEZEICHNUNG_LANG_FR, EZS_IMPORTNAME) VALUES (%s, %s, %s, %s, %s, %s, %s, '%s', '%s', '%s', '%s', '%s', '%s');" % (dd_schema, self.ezs_objectid, self.gzs_objectid, self.ebe_objectid, self.leg_objectid_de, self.leg_objectid_fr, self.ezs_reihenfolge, self.imp_objectid, self.uuid, self.ebe_bezeichnung_mittel_de, self.ebe_bezeichnung_mittel_fr, self.ebe_bezeichnung_lang_de, self.ebe_bezeichnung_lang_fr, self.ezs_importname))
         
     def __get_valuetables(self, attributes):
         for attribute in attributes:
@@ -149,3 +141,11 @@ class Layer(object):
             self.validation_messages.append("Für das Geoprodukt " + self.code + " (" + self.uuid + ") konnte aus GeoDBmeta kein XML heruntergeladen werden!")
             
         return is_valid
+    
+    def __collect_sql_statements(self):
+        for vt in self.valuetables:
+            self.sql_statements = self.sql_statements + vt.sql_statements
+            
+        for leg in self.legends:
+            self.sql_statements = self.sql_statements + leg.sql_statements
+            

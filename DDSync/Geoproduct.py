@@ -11,7 +11,11 @@ import sys
 class Geoproduct(object):
     def __init__(self, code):
         self.config = DDSync.helpers.config_helper.get_config()
-        self.code = code
+        self.logger = self.config['LOGGING']['logger']
+        
+        self.code = code.upper()
+        self.logger.info("Starte Synchronisierung des Geoprodukts " + self.code)
+        
         self.uuid = self.__get_uuid()
 
         self.gdbm_status = self.__get_gdbm_status()
@@ -21,13 +25,21 @@ class Geoproduct(object):
 
         self.validation_messages = []
         self.is_valid = self.__validate()
+        
+        self.sql_statements = []
 
         if self.is_valid:
+            self.logger.info("Basis-Check erfolgreich absolviert.")
+            self.logger.info("DD-Infos werden zusammengetragen.")
             self.extract_dd_infos()
             self.layers = self.__get_layers()
         else:
             for msg in self.validation_messages:
-                print(msg)
+                self.logger.info(msg)
+                
+        self.__collect_sql_statements()
+        for sql in self.sql_statements:
+            print(sql)
     
     def extract_dd_infos(self):
    
@@ -38,7 +50,7 @@ class Geoproduct(object):
         self.gpr_objectid = self.__get_gpr_objectid()
         if self.gpr_objectid == "0":
             self.gpr_exists = False
-            self.gpr_objectid = DDSync.Helper.get_dd_sequence_number()
+            self.gpr_objectid = DDSync.helpers.sql_helper.get_dd_sequence_number(self.config)
         else:
             self.gpr_exists = True
         
@@ -49,14 +61,6 @@ class Geoproduct(object):
         self.gpr_bezeichnung_mittel_fr = unicode(xpatheval("string(/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:title/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString)"))
         self.gpr_bezeichnung_lang_de = unicode(xpatheval("string(/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:otherCitationDetails/gco:CharacterString)"))
         self.gpr_bezeichnung_lang_fr = unicode(xpatheval("string(/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:otherCitationDetails/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString/text())"))
-        
-        print("GPR_OBJECTID: " + self.gpr_objectid)
-        print("THE_OBJECTID: " + self.the_objectid)
-        print("GPR_BEZEICHNUNG: " + self.gpr_bezeichnung)
-        print("GPR_BEZEICHNUNG_MITTEL_DE: " + self.gpr_bezeichnung_mittel_de)
-        print("GPR_BEZEICHNUNG_MITTEL_FR: " + self.gpr_bezeichnung_mittel_fr)
-        print("GPR_BEZEICHNUNG_LANG_DE: " + self.gpr_bezeichnung_lang_de)
-        print("GPR_BEZEICHNUNG_LANG_FR: " + self.gpr_bezeichnung_lang_fr)
         
         # TB_GEOPRODUKT_ZEITSTAND
         self.gzs_objectid = DDSync.helpers.sql_helper.get_dd_sequence_number(self.config)
@@ -73,26 +77,10 @@ class Geoproduct(object):
         self.gzs_bezeichnung_lang_fr = self.gpr_bezeichnung_lang_fr
         self.sta_objectid = "1"
         
-        print("GZS_OBJECTID: " + self.gzs_objectid)
-        print("GZS_ZEITSTAND: " + datetime.datetime.strftime(self.gzs_zeitstand, '%Y.%m.%d'))
-        print("GZS_JAHR: " + self.gzs_jahr)
-        print("GZS_VERSION: " + self.gzs_version)
-        print("GZS_KLASSIFIKATION: " + self.gzs_klassifikation)
-        print("GZS_BEZEICHNUNG_MITTEL_DE: " + self.gzs_bezeichnung_mittel_de)
-        print("GZS_BEZEICHNUNG_MITTEL_FR: " + self.gzs_bezeichnung_mittel_fr)
-        print("GZS_BEZEICHNUNG_LANG_DE: " + self.gzs_bezeichnung_lang_de)
-        print("GZS_BEZEICHNUNG_LANG_FR: " + self.gzs_bezeichnung_lang_fr)
-        print("STA_OBJECTID: " + self.sta_objectid)
-        print("UUID: " + self.uuid)
+        self.sql_statements.append("INSERT INTO %s.TB_GEOPRODUKT (gpr_bezeichnung, gpr_bezeichnung_mittel_de, gpr_bezeichnung_mittel_fr, gpr_bezeichnung_lang_de, gpr_bezeichnung_lang_fr) VALUES ('%s', '%s', '%s', '%s', '%s');" % (dd_schema, self.gpr_bezeichnung, self.gpr_bezeichnung_mittel_de, self.gpr_bezeichnung_mittel_fr, self.gpr_bezeichnung_lang_de, self.gpr_bezeichnung_lang_fr))
+        self.sql_statements.append("INSERT INTO %s.TB_GP_THEMA (gpr_objectid, the_objectid) VALUES (%s, %s);" % (dd_schema, self.gpr_objectid, self.the_objectid))
+        self.sql_statements.append("INSERT INTO %s.TB_GEOPRODUKT_ZEITSTAND (gzs_bezeichnung_mittel_de, gzs_bezeichnung_mittel_fr, gzs_bezeichnung_lang_de, gzs_bezeichung_lang_fr) VALUES ('%s', '%s', '%s', '%s');" % (dd_schema, self.gzs_bezeichnung_mittel_de, self.gzs_bezeichnung_mittel_fr, self.gzs_bezeichnung_lang_de, self.gzs_bezeichnung_lang_fr))
         
-        self.sql_tb_geoprodukt = "INSERT INTO %s.TB_GEOPRODUKT (gpr_bezeichnung, gpr_bezeichnung_mittel_de, gpr_bezeichnung_mittel_fr, gpr_bezeichnung_lang_de, gpr_bezeichnung_lang_fr) VALUES ('%s', '%s', '%s', '%s', '%s')" % (dd_schema, self.gpr_bezeichnung, self.gpr_bezeichnung_mittel_de, self.gpr_bezeichnung_mittel_fr, self.gpr_bezeichnung_lang_de, self.gpr_bezeichnung_lang_fr)
-        self.sql_tb_gp_thema = "INSERT INTO %s.TB_GP_THEMA (gpr_objectid, the_objectid) VALUES (%s, %s)" % (dd_schema, self.gpr_objectid, self.the_objectid)
-        self.sql_tb_geoprodukt_zeitstand = "INSERT INTO %s.TB_GEOPRODUKT_ZEITSTAND (gzs_bezeichnung_mittel_de, gzs_bezeichnung_mittel_fr, gzs_bezeichnung_lang_de, gzs_bezeichung_lang_fr) VALUES ('%s', '%s', '%s', '%s')" % (dd_schema, self.gzs_bezeichnung_mittel_de, self.gzs_bezeichnung_mittel_fr, self.gzs_bezeichnung_lang_de, self.gzs_bezeichnung_lang_fr)
-        
-        print(self.sql_tb_geoprodukt)
-        print(self.sql_tb_gp_thema)
-        print(self.sql_tb_geoprodukt_zeitstand)
-    
     def __get_uuid(self):
         uuid = ""
         gdbp_schema = self.config['GDBP']['schema']
@@ -169,7 +157,6 @@ class Geoproduct(object):
         return gpr_objectid
     
     def __get_the_objectid(self, category):
-        print("KATEGORIE:" + category)
         dd_category = self.config['category_mapping'][category]
         dd_schema = self.config['DD']['schema']
         sql = "SELECT the_objectid FROM " + dd_schema + ".tb_thema WHERE the_bezeichnung='" + dd_category + "'"
@@ -202,3 +189,7 @@ class Geoproduct(object):
             self.validation_messages.append("Für das Geoprodukt " + self.code + " (" + self.uuid + ") konnte aus GeoDBmeta kein XML heruntergeladen werden!")
             
         return is_valid
+    
+    def __collect_sql_statements(self):
+        for layer in self.layers:
+            self.sql_statements = self.sql_statements + layer.sql_statements
