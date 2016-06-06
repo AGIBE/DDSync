@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import DDSync.helpers.config_helper
 import DDSync.helpers.sql_helper
+import DDSync.helpers.check_helper
 import DDSync.Layer
 import requests
 from lxml import etree
@@ -22,6 +23,8 @@ class Geoproduct(object):
         self.gdbm_versionid = self.__get_gdbm_versionid()
         
         self.xml = self.__get_xml()
+
+        self.__get_jahr_version()
 
         self.validation_messages = []
         self.is_valid = self.__validate()
@@ -135,6 +138,12 @@ class Geoproduct(object):
 
         return xml_tree
     
+    def __get_jahr_version(self):
+        sql = "select zeitstand_jahr, zeitstand_version from gdbp.geoprodukte where code='AVPLZORT'"
+        result = DDSync.helpers.sql_helper.readOracleSQL(self.config['GDBP']['connection_string'], sql)
+        self.jahr = result[0][0]
+        self.version = result[0][1]
+    
     def __get_revision_date(self, dates):
         revision_date = ""
         for date in dates:
@@ -186,6 +195,10 @@ class Geoproduct(object):
         if self.xml == "".encode('utf-8'):
             is_valid = False
             self.validation_messages.append("Für das Geoprodukt " + self.code + " (" + self.uuid + ") konnte aus GeoDBmeta kein XML heruntergeladen werden!")
+            
+        if DDSync.helpers.check_helper.run_checkscript_normierung(self.config, self.code, self.jahr, self.version) == False:
+            is_valid = False
+            self.validation_messages.append("Das Geoprodukt " + self.code + " hat das Checkscript Normierung nicht erfolgreich absolviert.")
             
         return is_valid
     
