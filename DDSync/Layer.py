@@ -5,11 +5,14 @@ import DDSync.Legend
 import DDSync.helpers.sql_helper
 import requests
 from lxml import etree
+import os
+import arcpy
 
 class Layer(object):
-    def __init__(self, code, uuid, status, gzs_objectid, config):
+    def __init__(self, code, uuid, status, gzs_objectid, gprcode, config):
         self.config = config
         self.code = code
+        self.gprcode = gprcode
         self.uuid = uuid
 
         self.gdbm_status = status
@@ -55,7 +58,7 @@ class Layer(object):
         self.ezs_objectid = DDSync.helpers.sql_helper.get_dd_sequence_number(self.config)
         self.leg_objectid_de = ""
         self.leg_objectid_fr = ""
-        self.ezs_reihenfolge = "0"
+        self.ezs_reihenfolge = self.__get_ezs_reihenfolge()
         self.imp_objectid = "14"
         self.ezs_importname = "x"
         
@@ -106,6 +109,19 @@ class Layer(object):
         if len(res) == 1:
             ebe_objectid = unicode(res[0][0])
         return ebe_objectid
+    
+    def __get_ezs_reihenfolge(self):
+        ezs_reihenfolge = 99
+        mxdfile = os.path.join(self.config['MXD']['mxd_base_path'], self.gprcode, "work", "mxd", self.gprcode + "_DE.mxd")
+
+        mxd = arcpy.mapping.MapDocument(mxdfile)
+        df = arcpy.mapping.ListDataFrames(mxd)[0]
+        for index, layer in enumerate(arcpy.mapping.ListLayers(map_document_or_layer=mxd, data_frame=df)):
+            if layer.name.upper() == self.ebe_bezeichnung_mittel_de.upper():
+                ezs_reihenfolge = index
+        if ezs_reihenfolge == 99:
+            self.logger.warn("Ebene " + self.code + ": Ebenen-Reihenfolge nicht gefunden.")
+        return unicode(ezs_reihenfolge)
 
     def __get_dat_objectid(self, datatype):
         dd_datatype = self.config['DATATYPE_MAPPING'][datatype]

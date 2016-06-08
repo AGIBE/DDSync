@@ -117,7 +117,7 @@ class Geoproduct(object):
         gdbm_results = DDSync.helpers.sql_helper.readMySQL(sql, self.config)
         if len(gdbm_results) > 0:
             for gdbm_result in gdbm_results:
-                layer = DDSync.Layer.Layer(gdbm_result[0], gdbm_result[1], gdbm_result[2], self.gzs_objectid, self.config)
+                layer = DDSync.Layer.Layer(gdbm_result[0], gdbm_result[1], gdbm_result[2], self.gzs_objectid, self.code, self.config)
                 layers.append(layer)
 
         return layers
