@@ -11,6 +11,7 @@ def init_logging(config):
     if not os.path.exists(log_directory):
         os.makedirs(log_directory)
     logfile = os.path.join(log_directory, "DDSync" + datetime.datetime.now().strftime("_%Y_%m_%d_%H_%M_%S") + ".log")
+    config['LOGGING']['logfile'] = logfile
         
     logger = logging.getLogger("DDSyncLogger")
     logger.setLevel(logging.DEBUG)

@@ -68,6 +68,7 @@ def get_config():
     
     logger = DDSync.helpers.log_helper.init_logging(config)
     logger.info('Konfiguration wird eingelesen.')
+    logger.info('Logfile: ' + config['LOGGING']['logfile'])
     config['LOGGING']['logger'] = logger
 
     # Connection-Strings zusammensetzen
