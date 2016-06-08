@@ -5,6 +5,7 @@ import DDSync.helpers.sql_helper
 import DDSync.helpers.check_helper
 import DDSync.Layer
 import requests
+import codecs
 from lxml import etree
 import datetime
 import sys
@@ -41,6 +42,18 @@ class Geoproduct(object):
             for msg in self.validation_messages:
                 self.logger.error(msg)
     
+    def write_sql_to_file(self, sql_filename):
+        with codecs.open(sql_filename, "w", "utf-8") as f:
+            self.logger.info("Schreibe SQL-Statements in " + sql_filename)
+            for sql in self.sql_statements:
+                f.write(sql + "\n")
+
+    def write_sql_to_dd(self):
+        self.logger.info("Schreibe folgende SQL-Statements ins DataDictionary:")
+        for sql in self.sql_statements:
+            self.logger.info(sql)
+            # DDSync.helpers.sql_helper.writeOracleSQL(self.config['DD']['connection_string'], sql)
+        
     def extract_dd_infos(self):
    
         xpatheval = etree.XPathEvaluator(self.xml, namespaces=self.config['XML_NAMESPACES'])

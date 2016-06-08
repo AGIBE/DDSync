@@ -14,15 +14,11 @@ def list_geoproducts(args):
 
 def sync_geoproduct(args):
     gpr = DDSync.Geoproduct.Geoproduct(args.GEOPRODUKT)
-    for sql in gpr.sql_statements:
-        print(sql)
+    gpr.write_sql_to_dd()
 
 def drysync_geoproduct(args):
     gpr = DDSync.Geoproduct.Geoproduct(args.GEOPRODUKT)
-    output_filename = args.SQLFILE
-    with codecs.open(output_filename, "w", "utf-8") as f:
-        for sql in gpr.sql_statements:
-            f.write(sql + "\n")
+    gpr.write_sql_to_file(args.file)
 
 def main():
     version_text = "DDSync v" + __version__
@@ -38,10 +34,10 @@ def main():
     sync_parser.add_argument("GEOPRODUKT", help="Geoprodukt-Code.")
     sync_parser.set_defaults(func=sync_geoproduct)
     
-    # SYNC-Befehl
+    # DRYSYNC-Befehl
     drysync_parser = subparsers.add_parser('drysync', help='Gibt nur die SQL-Statements aus, schreibt aber nichts ins DataDicionary.')
     drysync_parser.add_argument("GEOPRODUKT", help="Geoprodukt-Code.")
-    drysync_parser.add_argument("SQLFILE", help="Output-Datei für die SQL-Statements.")
+    drysync_parser.add_argument("-f", "--file", help="Output-Datei für die SQL-Statements.")
     drysync_parser.set_defaults(func=drysync_geoproduct)
     
     args = parser.parse_args()
