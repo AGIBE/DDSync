@@ -111,16 +111,28 @@ class Layer(object):
         return ebe_objectid
     
     def __get_ezs_reihenfolge(self):
-        ezs_reihenfolge = 99
+        ezs_reihenfolge = 99 # Default-Wert
+        
         mxdfile = os.path.join(self.config['MXD']['mxd_base_path'], self.gprcode, "work", "mxd", self.gprcode + "_DE.mxd")
-
         mxd = arcpy.mapping.MapDocument(mxdfile)
         df = arcpy.mapping.ListDataFrames(mxd)[0]
+
         for index, layer in enumerate(arcpy.mapping.ListLayers(map_document_or_layer=mxd, data_frame=df)):
-            if layer.name.upper() == self.ebe_bezeichnung_mittel_de.upper():
+            # der datasetName im mxd beginnt in der Regel mit NORM.
+            # daher muss nur der hintere Teil per Split ermittelt werden.
+            if "." in layer.datasetName:
+                dsname = layer.datasetName.split(".")[1]
+            else:
+                dsname = layer.datasetName
+            # ohne Schemaname vergleichen
+            ebename = self.gprcode + "_" + self.code
+
+            if  dsname == ebename: 
                 ezs_reihenfolge = index
+
         if ezs_reihenfolge == 99:
             self.logger.warn("Ebene " + self.code + ": Ebenen-Reihenfolge nicht gefunden.")
+
         return unicode(ezs_reihenfolge)
 
     def __get_dat_objectid(self, datatype):
