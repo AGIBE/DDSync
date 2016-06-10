@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function, unicode_literals
 import cx_Oracle
-import mysql.connector
+import pymysql
 
 def readOracleSQL(connection_string, sql_statement):
     with cx_Oracle.connect(connection_string) as conn:
@@ -15,22 +15,22 @@ def writeOracleSQL(connection_string, sql_statement):
     with cx_Oracle.connect(connection_string) as conn:
         cur = conn.cursor()
         cur.execute(sql_statement)
-        
+
 def readMySQL(sql_statement, config):
     username = config['MYSQL']['username']
     password = config['MYSQL']['password']
-    host = config['MYSQL']['host']
-    port = config['MYSQL']['port']
+    host = str(config['MYSQL']['host'])
+    port = int(config['MYSQL']['port'])
     database = config['MYSQL']['database']
-    # mysql.connector ist wahrscheinlich kein contextmanager
-    conn = mysql.connector.connect(user=username, password=password, host=host, port=port, database=database)
-    cur = conn.cursor()
-    cur.execute(sql_statement)
-    result_list = cur.fetchall()
+
+    conn = pymysql.connect(host=host, user=username, password=password, db=database, port=port)
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(sql_statement)
+            result_list = cursor.fetchall()
+    finally:
+        conn.close()
     
-    cur.close()
-    conn.close()
-        
     return result_list
 
 def get_syncable_codes_from_gdbp(config):
