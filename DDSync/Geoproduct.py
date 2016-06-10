@@ -81,7 +81,7 @@ class Geoproduct(object):
         self.gzs_zeitstand = self.__get_revision_date(dates) 
         self.gzs_jahr = unicode(xpatheval("string(/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/bee:version/bee:DD_DataDictionary/bee:versionYear/gco:Decimal)"))
         self.gzs_version = unicode(xpatheval("string(/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/bee:version/bee:DD_DataDictionary/bee:versionNumber/gco:Decimal)"))
-        self.gzs_klassifikation = ""
+        self.gzs_klassifikation = unicode(xpatheval("string(/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:resourceConstraints/gmd:MD_LegalConstraints/gmd:otherConstraints/gco:CharacterString)"))[0]
         if len(xpatheval("string(/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:resourceConstraints/gmd:MD_LegalConstraints/gmd:otherConstraints/gco:CharacterString)")) > 0:
             self.gzs_klassifikation = unicode(xpatheval("string(/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:resourceConstraints/gmd:MD_LegalConstraints/gmd:otherConstraints/gco:CharacterString)"))[0]
         self.gzs_bezeichnung_mittel_de = self.gpr_bezeichnung_mittel_de
@@ -94,7 +94,7 @@ class Geoproduct(object):
         if not self.gpr_exists:        
             self.sql_statements.append("INSERT INTO %s.TB_GEOPRODUKT (gpr_bezeichnung, gpr_bezeichnung_mittel_de, gpr_bezeichnung_mittel_fr, gpr_bezeichnung_lang_de, gpr_bezeichnung_lang_fr) VALUES ('%s', '%s', '%s', '%s', '%s');" % (dd_schema, self.gpr_bezeichnung, self.gpr_bezeichnung_mittel_de, self.gpr_bezeichnung_mittel_fr, self.gpr_bezeichnung_lang_de, self.gpr_bezeichnung_lang_fr))
             self.sql_statements.append("INSERT INTO %s.TB_GP_THEMA (gpr_objectid, the_objectid) VALUES (%s, %s);" % (dd_schema, self.gpr_objectid, self.the_objectid))
-        self.sql_statements.append("INSERT INTO %s.TB_GEOPRODUKT_ZEITSTAND (gzs_bezeichnung_mittel_de, gzs_bezeichnung_mittel_fr, gzs_bezeichnung_lang_de, gzs_bezeichung_lang_fr) VALUES ('%s', '%s', '%s', '%s');" % (dd_schema, self.gzs_bezeichnung_mittel_de, self.gzs_bezeichnung_mittel_fr, self.gzs_bezeichnung_lang_de, self.gzs_bezeichnung_lang_fr))
+        self.sql_statements.append("INSERT INTO %s.TB_GEOPRODUKT_ZEITSTAND (gpr_objectid, sta_objectid, gzs_zeitstand, gzs_jahr, gzs_version, gzs_klassifikation, uuid, gzs_bezeichnung_mittel_de, gzs_bezeichnung_mittel_fr, gzs_bezeichnung_lang_de, gzs_bezeichnung_lang_fr) VALUES ('%s', %s, TO_DATE('%s', 'YYYY-MM-DD'), '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s');" % (dd_schema, self.gpr_objectid, self.sta_objectid, self.gzs_zeitstand, self.gzs_jahr, self.gzs_version, self.gzs_klassifikation, self.uuid, self.gzs_bezeichnung_mittel_de, self.gzs_bezeichnung_mittel_fr, self.gzs_bezeichnung_lang_de, self.gzs_bezeichnung_lang_fr))
         
     def __get_uuid(self):
         uuid = ""
@@ -164,7 +164,7 @@ class Geoproduct(object):
             dateType = unicode(xpatheval("gmd:CI_Date/gmd:dateType/gmd:CI_DateTypeCode/@codeListValue")[0])
             if dateType == 'revision':
                 revision_date = unicode(xpatheval("gmd:CI_Date/gmd:date/gco:Date/text()")[0])
-                revision_date = datetime.datetime.strptime(revision_date, '%Y-%m-%d') 
+#                 revision_date = datetime.datetime.strptime(revision_date, '%Y-%m-%d') 
         return revision_date
     
     def __get_gpr_objectid(self):
