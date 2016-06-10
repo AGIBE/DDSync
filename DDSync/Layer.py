@@ -118,17 +118,23 @@ class Layer(object):
         df = arcpy.mapping.ListDataFrames(mxd)[0]
 
         for index, layer in enumerate(arcpy.mapping.ListLayers(map_document_or_layer=mxd, data_frame=df)):
-            # der datasetName im mxd beginnt in der Regel mit NORM.
-            # daher muss nur der hintere Teil per Split ermittelt werden.
-            if "." in layer.datasetName:
-                dsname = layer.datasetName.split(".")[1]
+            # Annotations unterstützen die Property datasetName nicht (evtl. andere auch nicht)
+            # In diesem Fall wird einfach der Layername verglichen
+            if layer.supports("datasetName"):
+                # der datasetName im mxd beginnt in der Regel mit NORM.
+                # daher muss nur der hintere Teil per Split ermittelt werden.
+                if "." in layer.datasetName:
+                    dsname = layer.datasetName.split(".")[1]
+                else:
+                    dsname = layer.datasetName
+                # ohne Schemaname vergleichen
+                ebename = self.gprcode + "_" + self.code
+    
+                if  dsname == ebename: 
+                    ezs_reihenfolge = index
             else:
-                dsname = layer.datasetName
-            # ohne Schemaname vergleichen
-            ebename = self.gprcode + "_" + self.code
-
-            if  dsname == ebename: 
-                ezs_reihenfolge = index
+                if layer.name.upper().strip() == self.ebe_bezeichnung_mittel_de:
+                    ezs_reihenfolge = index
 
         if ezs_reihenfolge == 99:
             self.logger.warn("Ebene " + self.code + ": Ebenen-Reihenfolge nicht gefunden.")
