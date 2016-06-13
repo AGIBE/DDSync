@@ -9,8 +9,18 @@ import DDSync.helpers.config_helper
 
 def list_geoproducts(args):
     config = DDSync.helpers.config_helper.get_config()
+    syncable_gpr = []
+
     for gpr in DDSync.helpers.sql_helper.get_syncable_codes_from_gdbp(config):
-        print(gpr)
+        uuid = DDSync.helpers.sql_helper.get_uuid(config, gpr)
+        if not DDSync.helpers.sql_helper.uuid_exists_in_dd(config, uuid):
+            syncable_gpr.append(gpr)
+            
+    if len(syncable_gpr) > 0:
+        for sync_gpr in syncable_gpr:
+            print(sync_gpr)
+    else:
+        config['LOGGING']['logger'].warn("Es wurden keine Geoprodukte gefunden, die synchronisiert werden können.")
 
 def sync_geoproduct(args):
     gpr = DDSync.Geoproduct.Geoproduct(args.GEOPRODUKT)

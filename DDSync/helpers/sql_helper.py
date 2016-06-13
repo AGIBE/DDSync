@@ -42,6 +42,27 @@ def get_syncable_codes_from_gdbp(config):
 
     return codes
 
+def get_uuid(config, code):
+    uuid = ""
+    gdbp_schema = config['GDBP']['schema']
+    sql = "SELECT id_geodbmeta FROM " + gdbp_schema + ".geoprodukte WHERE code='" + code + "'"
+    gdbp_results = readOracleSQL(config['GDBP']['connection_string'], sql)
+    if len(gdbp_results) == 1:
+        if gdbp_results[0][0]:
+            uuid = gdbp_results[0][0]
+
+    return uuid
+
+def uuid_exists_in_dd(config, uuid):
+    uuid_exists = True
+    schema = config['DD']['schema']
+    sql = "select gzs_objectid from " + schema + ".TB_GEOPRODUKT_ZEITSTAND where uuid='" + uuid + "'"
+    res = readOracleSQL(config['DD']['connection_string'], sql)
+    if len(res) == 0:
+        uuid_exists = False;
+
+    return uuid_exists
+
 def get_dd_sequence_number(config):
     schema = config['DD']['schema']
     sql = "select GDBBE_SEQ.NEXTVAL as GPR_OBJECTID from dual"

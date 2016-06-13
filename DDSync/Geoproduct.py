@@ -18,7 +18,8 @@ class Geoproduct(object):
         self.code = code.upper()
         self.logger.info("Starte Synchronisierung des Geoprodukts " + self.code)
         
-        self.uuid = self.__get_uuid()
+        self.uuid = DDSync.helpers.sql_helper.get_uuid(self.config, self.code)
+        self.logger.info("Metadaten-UUID: " + self.uuid)
 
         self.gdbm_status = self.__get_gdbm_status()
         self.gdbm_versionid = self.__get_gdbm_versionid()
@@ -41,6 +42,7 @@ class Geoproduct(object):
         else:
             for msg in self.validation_messages:
                 self.logger.error(msg)
+            sys.exit()
     
     def write_sql_to_file(self, sql_filename):
         with codecs.open(sql_filename, "w", "utf-8") as f:
@@ -96,15 +98,16 @@ class Geoproduct(object):
             self.sql_statements.append("INSERT INTO %s.TB_GP_THEMA (gpr_objectid, the_objectid) VALUES (%s, %s);" % (dd_schema, self.gpr_objectid, self.the_objectid))
         self.sql_statements.append("INSERT INTO %s.TB_GEOPRODUKT_ZEITSTAND (gpr_objectid, sta_objectid, gzs_zeitstand, gzs_jahr, gzs_version, gzs_klassifikation, uuid, gzs_bezeichnung_mittel_de, gzs_bezeichnung_mittel_fr, gzs_bezeichnung_lang_de, gzs_bezeichnung_lang_fr) VALUES ('%s', %s, TO_DATE('%s', 'YYYY-MM-DD'), '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s');" % (dd_schema, self.gpr_objectid, self.sta_objectid, self.gzs_zeitstand, self.gzs_jahr, self.gzs_version, self.gzs_klassifikation, self.uuid, self.gzs_bezeichnung_mittel_de, self.gzs_bezeichnung_mittel_fr, self.gzs_bezeichnung_lang_de, self.gzs_bezeichnung_lang_fr))
         
-    def __get_uuid(self):
-        uuid = ""
-        gdbp_schema = self.config['GDBP']['schema']
-        sql = "SELECT id_geodbmeta FROM " + gdbp_schema + ".geoprodukte WHERE code='" + self.code + "'"
-        gdbp_results = DDSync.helpers.sql_helper.readOracleSQL(self.config['GDBP']['connection_string'], sql)
-        if len(gdbp_results) == 1:
-            uuid = gdbp_results[0][0]
-
-        return uuid
+#     def get_uuid(self, code):
+#         uuid = ""
+#         gdbp_schema = self.config['GDBP']['schema']
+#         sql = "SELECT id_geodbmeta FROM " + gdbp_schema + ".geoprodukte WHERE code='" + self.code + "'"
+#         gdbp_results = DDSync.helpers.sql_helper.readOracleSQL(self.config['GDBP']['connection_string'], sql)
+#         if len(gdbp_results) == 1:
+#             if gdbp_results[0][0]:
+#                 uuid = gdbp_results[0][0]
+# 
+#         return uuid
     
     def __get_gdbm_status(self):
         status = ""
@@ -188,6 +191,10 @@ class Geoproduct(object):
 
     def __validate(self):
         is_valid = True
+        
+        if DDSync.helpers.sql_helper.uuid_exists_in_dd(self.config, self.uuid):
+            is_valid = False
+            self.validation_messages.append("Der Zeitstand existiert bereits im DataDictionary!")
         
         if self.code not in DDSync.helpers.sql_helper.get_syncable_codes_from_gdbp(self.config):
             is_valid = False
