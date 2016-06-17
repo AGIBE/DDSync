@@ -155,7 +155,7 @@ class Geoproduct(object):
         return xml_tree
     
     def __get_jahr_version(self):
-        sql = "select zeitstand_jahr, zeitstand_version from gdbp.geoprodukte where code='AVPLZORT'"
+        sql = "select zeitstand_jahr, zeitstand_version from gdbp.geoprodukte where code='" + self.code + "'"
         result = DDSync.helpers.sql_helper.readOracleSQL(self.config['GDBP']['connection_string'], sql)
         self.jahr = result[0][0]
         self.version = result[0][1]
