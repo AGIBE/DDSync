@@ -216,9 +216,9 @@ class Geoproduct(object):
             is_valid = False
             self.validation_messages.append("Für das Geoprodukt " + self.code + " (" + self.uuid + ") konnte aus GeoDBmeta kein XML heruntergeladen werden!")
             
-        if DDSync.helpers.check_helper.run_checkscript_normierung(self.config, self.code, self.jahr, self.version) == False:
-            is_valid = False
-            self.validation_messages.append("Das Geoprodukt " + self.code + " hat das Checkscript Normierung nicht erfolgreich absolviert.")
+#         if DDSync.helpers.check_helper.run_checkscript_normierung(self.config, self.code, self.jahr, self.version) == False:
+#             is_valid = False
+#             self.validation_messages.append("Das Geoprodukt " + self.code + " hat das Checkscript Normierung nicht erfolgreich absolviert.")
             
         return is_valid
     

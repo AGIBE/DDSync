@@ -13,9 +13,9 @@ def run_checkscript_normierung(config, code, jahr, version):
     logger.info("Geoprodukt: " + code)
     logger.info("Jahr: " + unicode(jahr))
     logger.info("Version: " + unicode(version))
-#     result = arcpy.CheckskriptNormierung(code, jahr, version, "true", "true", "true", "true")
-#     
-#     if unicode(result[0]) == "true":
-#         status_checkscript_normierung = True
+    result = arcpy.CheckskriptNormierung(code, jahr, version, "true", "true", "true", "true")
+     
+    if unicode(result[0]) == "true":
+        status_checkscript_normierung = True
         
     return status_checkscript_normierung
