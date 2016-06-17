@@ -70,3 +70,8 @@ def get_dd_sequence_number(config):
     res = readOracleSQL(connection_string, sql)
     sequence_number =  unicode(res[0][0])
     return sequence_number
+
+def clean(text):
+    cleaned = text.replace("'", "''")
+    return cleaned
+

@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import DDSync.Valuetable
 import DDSync.Legend
 import DDSync.helpers.sql_helper
+from DDSync.helpers.sql_helper import clean
 import requests
 from lxml import etree
 import os
@@ -71,8 +72,8 @@ class Layer(object):
         
         # Wenn es die Ebene (TB_EBENE) schon gibt, dann muss sie nicht aktualisiert werden.
         if not self.ebe_exists:
-            self.sql_statements.append("INSERT INTO %s.TB_EBENE (EBE_OBJECTID, DAT_OBJECTID, EBE_BEZEICHNUNG, EBE_BEZEICHNUNG_MITTEL_DE, EBE_BEZEICHNUNG_MITTEL_FR, EBE_BEZEICHNUNG_LANG_DE, EBE_BEZEICHNUNG_LANG_FR) VALUES (%s, %s, '%s', '%s', '%s', '%s', '%s');" % (dd_schema, self.ebe_objectid, self.dat_objectid, self.code, self.ebe_bezeichnung_mittel_de, self.ebe_bezeichnung_mittel_fr, self.ebe_bezeichnung_lang_de, self.ebe_bezeichnung_lang_fr))
-        self.sql_statements.append("INSERT INTO %s.TB_EBENE_ZEITSTAND (EZS_OBJECTID, GZS_OBJECTID, EBE_OBJECTID, LEG_OBJECTID_DE, LEG_OBJECTID_FR, EZS_REIHENFOLGE, IMP_OBJECTID, UUID, EZS_BEZEICHNUNG_MITTEL_DE, EZS_BEZEICHNUNG_MITTEL_FR, EZS_BEZEICHNUNG_LANG_DE, EZS_BEZEICHNUNG_LANG_FR, EZS_IMPORTNAME) VALUES (%s, %s, %s, %s, %s, %s, %s, '%s', '%s', '%s', '%s', '%s', '%s');" % (dd_schema, self.ezs_objectid, self.gzs_objectid, self.ebe_objectid, self.leg_objectid_de, self.leg_objectid_fr, self.ezs_reihenfolge, self.imp_objectid, self.uuid, self.ebe_bezeichnung_mittel_de, self.ebe_bezeichnung_mittel_fr, self.ebe_bezeichnung_lang_de, self.ebe_bezeichnung_lang_fr, self.ezs_importname))
+            self.sql_statements.append("INSERT INTO %s.TB_EBENE (EBE_OBJECTID, DAT_OBJECTID, EBE_BEZEICHNUNG, EBE_BEZEICHNUNG_MITTEL_DE, EBE_BEZEICHNUNG_MITTEL_FR, EBE_BEZEICHNUNG_LANG_DE, EBE_BEZEICHNUNG_LANG_FR) VALUES (%s, %s, '%s', '%s', '%s', '%s', '%s')" % (dd_schema, self.ebe_objectid, self.dat_objectid, self.code, clean(self.ebe_bezeichnung_mittel_de), clean(self.ebe_bezeichnung_mittel_fr), clean(self.ebe_bezeichnung_lang_de), clean(self.ebe_bezeichnung_lang_fr)))
+        self.sql_statements.append("INSERT INTO %s.TB_EBENE_ZEITSTAND (EZS_OBJECTID, GZS_OBJECTID, EBE_OBJECTID, LEG_OBJECTID_DE, LEG_OBJECTID_FR, EZS_REIHENFOLGE, IMP_OBJECTID, UUID, EZS_BEZEICHNUNG_MITTEL_DE, EZS_BEZEICHNUNG_MITTEL_FR, EZS_BEZEICHNUNG_LANG_DE, EZS_BEZEICHNUNG_LANG_FR, EZS_IMPORTNAME) VALUES (%s, %s, %s, %s, %s, %s, %s, '%s', '%s', '%s', '%s', '%s', '%s')" % (dd_schema, self.ezs_objectid, self.gzs_objectid, self.ebe_objectid, self.leg_objectid_de, self.leg_objectid_fr, self.ezs_reihenfolge, self.imp_objectid, self.uuid, clean(self.ebe_bezeichnung_mittel_de), clean(self.ebe_bezeichnung_mittel_fr), clean(self.ebe_bezeichnung_lang_de), clean(self.ebe_bezeichnung_lang_fr), self.ezs_importname))
         
     def __get_valuetables(self, attributes):
         for attribute in attributes:

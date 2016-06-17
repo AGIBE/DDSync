@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from lxml import etree
 import DDSync.helpers.sql_helper
+from DDSync.helpers.sql_helper import clean
 
 class Legend(object):
     def __init__(self, legend_xml, ezs_objectid, config):
@@ -33,5 +34,5 @@ class Legend(object):
         self.leg_bezeichnung_mittel_de_fr = unicode(xpatheval("string(bee:legendTitleDE/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale = '#FR'])"))
         self.leg_bezeichnung_mittel_fr_fr = unicode(xpatheval("string(bee:legendTitleFR/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString[@locale = '#FR'])"))
         
-        self.sql_statements.append("INSERT INTO %s.tb_legende (LEG_OBJECTID, EZS_OBJECTID, SPR_OBJECTID, LEG_BEZEICHNUNG, LEG_BEZEICHNUNG_MITTEL_DE, lEG_BEZEICHNUNG_MITTEL_FR) VALUES (%s, %s, 1, '%s', '%s', '%s');" % (dd_schema, self.leg_objectid_de, self.ezs_objectid, self.leg_bezeichnung, self.leg_bezeichnung_mittel_de_de, self.leg_bezeichnung_mittel_fr_de)) 
-        self.sql_statements.append("INSERT INTO %s.tb_legende (LEG_OBJECTID, EZS_OBJECTID, SPR_OBJECTID, LEG_BEZEICHNUNG, LEG_BEZEICHNUNG_MITTEL_DE, lEG_BEZEICHNUNG_MITTEL_FR) VALUES (%s, %s, 2, '%s', '%s', '%s');" % (dd_schema, self.leg_objectid_fr, self.ezs_objectid, self.leg_bezeichnung, self.leg_bezeichnung_mittel_de_fr, self.leg_bezeichnung_mittel_fr_fr))
+        self.sql_statements.append("INSERT INTO %s.tb_legende (LEG_OBJECTID, EZS_OBJECTID, SPR_OBJECTID, LEG_BEZEICHNUNG, LEG_BEZEICHNUNG_MITTEL_DE, lEG_BEZEICHNUNG_MITTEL_FR) VALUES (%s, %s, 1, '%s', '%s', '%s')" % (dd_schema, self.leg_objectid_de, self.ezs_objectid, self.leg_bezeichnung, clean(self.leg_bezeichnung_mittel_de_de), clean(self.leg_bezeichnung_mittel_fr_de))) 
+        self.sql_statements.append("INSERT INTO %s.tb_legende (LEG_OBJECTID, EZS_OBJECTID, SPR_OBJECTID, LEG_BEZEICHNUNG, LEG_BEZEICHNUNG_MITTEL_DE, lEG_BEZEICHNUNG_MITTEL_FR) VALUES (%s, %s, 2, '%s', '%s', '%s')" % (dd_schema, self.leg_objectid_fr, self.ezs_objectid, self.leg_bezeichnung, clean(self.leg_bezeichnung_mittel_de_fr), clean(self.leg_bezeichnung_mittel_fr_fr)))

@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from lxml import etree
 import DDSync.helpers.sql_helper
-
+from DDSync.helpers.sql_helper import clean
 
 class Valuetable(object):
     def __init__(self, valuetable_xml, attribute_name, ezs_objectid, config):
@@ -31,4 +31,4 @@ class Valuetable(object):
         self.wtb_autoload = unicode(xpatheval("string(bee:autoload/gco:Boolean)"))
         self.wtb_importname = "x"
         
-        self.sql_statements.append("INSERT INTO %s.tb_wertetabelle (WTB_OBJECTID, EZS_OBJECTID, WTB_BEZEICHNUNG, WTB_BEZEICHNUNG_MITTEL_DE, WTB_BEZEICHNUNG_MITTEL_FR, WTB_JOIN_FOREIGNKEY, WTB_JOIN_PRIMARYKEY, WTB_JOIN_TYP, WTB_AUTOLOAD, WTB_IMPORTNAME) VALUES (%s, %s, '%s', '%s', '%s', '%s', '%s', '%s', %s, '%s');" % (dd_schema, self.wtb_objectid, self.ezs_objectid, self.wtb_bezeichnung, self.wtb_bezeichnung_mittel_de, self.wtb_bezeichnung_mittel_fr, self.wtb_join_foreignkey, self.wtb_join_primarykey, self.wtb_join_typ, self.wtb_autoload, self.wtb_importname))
+        self.sql_statements.append("INSERT INTO %s.tb_wertetabelle (WTB_OBJECTID, EZS_OBJECTID, WTB_BEZEICHNUNG, WTB_BEZEICHNUNG_MITTEL_DE, WTB_BEZEICHNUNG_MITTEL_FR, WTB_JOIN_FOREIGNKEY, WTB_JOIN_PRIMARYKEY, WTB_JOIN_TYP, WTB_AUTOLOAD, WTB_IMPORTNAME) VALUES (%s, %s, '%s', '%s', '%s', '%s', '%s', '%s', %s, '%s')" % (dd_schema, self.wtb_objectid, self.ezs_objectid, self.wtb_bezeichnung, clean(self.wtb_bezeichnung_mittel_de), clean(self.wtb_bezeichnung_mittel_fr), self.wtb_join_foreignkey, self.wtb_join_primarykey, self.wtb_join_typ, self.wtb_autoload, self.wtb_importname))

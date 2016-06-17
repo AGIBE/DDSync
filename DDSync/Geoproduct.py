@@ -2,12 +2,12 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import DDSync.helpers.config_helper
 import DDSync.helpers.sql_helper
+from DDSync.helpers.sql_helper import clean
 import DDSync.helpers.check_helper
 import DDSync.Layer
 import requests
 import codecs
 from lxml import etree
-import datetime
 import sys
 
 class Geoproduct(object):
@@ -48,14 +48,14 @@ class Geoproduct(object):
         with codecs.open(sql_filename, "w", "utf-8") as f:
             self.logger.info("Schreibe SQL-Statements in " + sql_filename)
             for sql in self.sql_statements:
-                f.write(sql + "\n")
+                f.write(sql + ";\n")
 
     def write_sql_to_dd(self):
         self.logger.info("Schreibe folgende SQL-Statements ins DataDictionary:")
         for sql in self.sql_statements:
             self.logger.info(sql)
-            # DDSync.helpers.sql_helper.writeOracleSQL(self.config['DD']['connection_string'], sql)
-        
+            DDSync.helpers.sql_helper.writeOracleSQL(self.config['DD']['connection_string'], sql)
+            
     def extract_dd_infos(self):
    
         xpatheval = etree.XPathEvaluator(self.xml, namespaces=self.config['XML_NAMESPACES'])
@@ -94,9 +94,9 @@ class Geoproduct(object):
 
         # Wenn es das Geoprodukt (TB_GEOPRODUKT) schon gibt, dann muss es nicht aktualisiert werden.
         if not self.gpr_exists:        
-            self.sql_statements.append("INSERT INTO %s.TB_GEOPRODUKT (gpr_bezeichnung, gpr_bezeichnung_mittel_de, gpr_bezeichnung_mittel_fr, gpr_bezeichnung_lang_de, gpr_bezeichnung_lang_fr) VALUES ('%s', '%s', '%s', '%s', '%s');" % (dd_schema, self.gpr_bezeichnung, self.gpr_bezeichnung_mittel_de, self.gpr_bezeichnung_mittel_fr, self.gpr_bezeichnung_lang_de, self.gpr_bezeichnung_lang_fr))
-            self.sql_statements.append("INSERT INTO %s.TB_GP_THEMA (gpr_objectid, the_objectid) VALUES (%s, %s);" % (dd_schema, self.gpr_objectid, self.the_objectid))
-        self.sql_statements.append("INSERT INTO %s.TB_GEOPRODUKT_ZEITSTAND (gpr_objectid, sta_objectid, gzs_zeitstand, gzs_jahr, gzs_version, gzs_klassifikation, uuid, gzs_bezeichnung_mittel_de, gzs_bezeichnung_mittel_fr, gzs_bezeichnung_lang_de, gzs_bezeichnung_lang_fr) VALUES ('%s', %s, TO_DATE('%s', 'YYYY-MM-DD'), '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s');" % (dd_schema, self.gpr_objectid, self.sta_objectid, self.gzs_zeitstand, self.gzs_jahr, self.gzs_version, self.gzs_klassifikation, self.uuid, self.gzs_bezeichnung_mittel_de, self.gzs_bezeichnung_mittel_fr, self.gzs_bezeichnung_lang_de, self.gzs_bezeichnung_lang_fr))
+            self.sql_statements.append("INSERT INTO %s.TB_GEOPRODUKT (gpr_bezeichnung, gpr_bezeichnung_mittel_de, gpr_bezeichnung_mittel_fr, gpr_bezeichnung_lang_de, gpr_bezeichnung_lang_fr) VALUES ('%s', '%s', '%s', '%s', '%s')" % (dd_schema, self.gpr_bezeichnung, clean(self.gpr_bezeichnung_mittel_de), clean(self.gpr_bezeichnung_mittel_fr), clean(self.gpr_bezeichnung_lang_de), clean(self.gpr_bezeichnung_lang_fr)))
+            self.sql_statements.append("INSERT INTO %s.TB_GP_THEMA (gpr_objectid, the_objectid) VALUES (%s, %s)" % (dd_schema, self.gpr_objectid, self.the_objectid))
+        self.sql_statements.append("INSERT INTO %s.TB_GEOPRODUKT_ZEITSTAND (gzs_objectid, gpr_objectid, sta_objectid, gzs_zeitstand, gzs_jahr, gzs_version, gzs_klassifikation, uuid, gzs_bezeichnung_mittel_de, gzs_bezeichnung_mittel_fr, gzs_bezeichnung_lang_de, gzs_bezeichnung_lang_fr) VALUES (%s, %s, %s, TO_DATE('%s', 'YYYY-MM-DD'), %s, %s, %s, '%s', '%s', '%s', '%s', '%s')" % (dd_schema, self.gzs_objectid, self.gpr_objectid, self.sta_objectid, self.gzs_zeitstand, self.gzs_jahr, self.gzs_version, self.gzs_klassifikation, self.uuid, clean(self.gzs_bezeichnung_mittel_de), clean(self.gzs_bezeichnung_mittel_fr), clean(self.gzs_bezeichnung_lang_de), clean(self.gzs_bezeichnung_lang_fr)))
         
 #     def get_uuid(self, code):
 #         uuid = ""
