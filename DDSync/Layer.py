@@ -57,8 +57,8 @@ class Layer(object):
         
         # TB_EBENE_ZEITSTAND
         self.ezs_objectid = DDSync.helpers.sql_helper.get_dd_sequence_number(self.config)
-        self.leg_objectid_de = ""
-        self.leg_objectid_fr = ""
+        self.leg_objectid_de = "NULL"
+        self.leg_objectid_fr = "NULL"
         self.ezs_reihenfolge = self.__get_ezs_reihenfolge()
         self.imp_objectid = "14"
         self.ezs_importname = "x"
