@@ -15,6 +15,13 @@ def writeOracleSQL(connection_string, sql_statement):
     with cx_Oracle.connect(connection_string) as conn:
         cur = conn.cursor()
         cur.execute(sql_statement)
+        
+def writeOracleSQL_multiple(connection_string, sql_statements):
+    with cx_Oracle.connect(connection_string) as conn:
+        cur = conn.cursor()
+        for sql_statement in sql_statements:
+            cur.execute(sql_statement)
+ 
 
 def readMySQL(sql_statement, config):
     username = config['MYSQL']['username']

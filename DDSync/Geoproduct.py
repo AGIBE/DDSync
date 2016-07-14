@@ -54,7 +54,8 @@ class Geoproduct(object):
         self.logger.info("Schreibe folgende SQL-Statements ins DataDictionary:")
         for sql in self.sql_statements:
             self.logger.info(sql)
-            DDSync.helpers.sql_helper.writeOracleSQL(self.config['DD']['connection_string'], sql)
+        DDSync.helpers.sql_helper.writeOracleSQL_multiple(self.config['DD']['connection_string'], self.sql_statements)
+        self.logger.info("Das Geoprodukt " + self.code + " wurde erfolgreich ins DataDictionary der GeoDB synchronisiert.")
             
     def extract_dd_infos(self):
    
