@@ -8,6 +8,7 @@ import requests
 from lxml import etree
 import os
 import arcpy
+import sys
 
 class Layer(object):
     def __init__(self, code, uuid, status, gzs_objectid, gprcode, config):
@@ -36,6 +37,7 @@ class Layer(object):
         else:
             for msg in self.validation_messages:
                 self.logger.error(msg)
+            sys.exit()
         
     def extract_dd_infos(self):
         xpatheval = etree.XPathEvaluator(self.xml, namespaces=self.config['XML_NAMESPACES'])
@@ -173,15 +175,15 @@ class Layer(object):
         
         if self.uuid == "":
             is_valid = False
-            self.validation_messages.append("Für das Geoprodukt " + self.code + " konnte in GeoDBProzess keine UUID ermittelt werden!")
+            self.validation_messages.append("Für die Ebene " + self.code + " konnte in GeoDBProzess keine UUID ermittelt werden!")
             
         if self.gdbm_status <> "Published":
             is_valid = False
-            self.validation_messages.append("Das Geoprodukt " + self.code + " (" + self.uuid + ") hat in GeoDBmeta nicht den Status 'Published'!")
+            self.validation_messages.append("Die Ebene " + self.code + " (" + self.uuid + ") hat in GeoDBmeta nicht den Status 'Published'!")
             
         if self.xml == "".encode('utf-8'):
             is_valid = False
-            self.validation_messages.append("Für das Geoprodukt " + self.code + " (" + self.uuid + ") konnte aus GeoDBmeta kein XML heruntergeladen werden!")
+            self.validation_messages.append("Für die Ebene " + self.code + " (" + self.uuid + ") konnte aus GeoDBmeta kein XML heruntergeladen werden!")
             
         return is_valid
     
