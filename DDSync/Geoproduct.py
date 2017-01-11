@@ -130,7 +130,7 @@ class Geoproduct(object):
     
     def __get_layers(self):
         layers = []
-        sql = "SELECT code, guid, status FROM vw_objects WHERE versionid in (SELECT child_id FROM jos_sdi_objectversionlink WHERE parent_id=" + self.gdbm_versionid + ") ORDER BY code asc"
+        sql = "SELECT code, guid, status FROM vw_objects WHERE versionid in (SELECT child_id FROM jos_sdi_versionlink WHERE parent_id=" + self.gdbm_versionid + ") ORDER BY code asc"
         gdbm_results = DDSync.helpers.sql_helper.readMySQL(sql, self.config)
         if len(gdbm_results) > 0:
             for gdbm_result in gdbm_results:
