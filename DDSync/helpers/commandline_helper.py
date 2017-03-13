@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function, unicode_literals
 import argparse
-import codecs
 from DDSync import __version__
 import DDSync.Geoproduct
 import DDSync.helpers.sql_helper
 import DDSync.helpers.config_helper
+from DDSync.helpers import fme_helper
 
 def list_geoproducts(args):
     config = DDSync.helpers.config_helper.get_config()
@@ -25,6 +25,8 @@ def list_geoproducts(args):
 def sync_geoproduct(args):
     gpr = DDSync.Geoproduct.Geoproduct(args.GEOPRODUKT)
     gpr.write_sql_to_dd()
+    # Erstellen des Tasks im DataDictionary
+    fme_helper.fme_runner(gpr.config, gpr.gzs_objectid)
 
 def drysync_geoproduct(args):
     gpr = DDSync.Geoproduct.Geoproduct(args.GEOPRODUKT)
