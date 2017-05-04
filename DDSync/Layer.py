@@ -79,6 +79,9 @@ class Layer(object):
             self.sql_statements.append("INSERT INTO %s.TB_EBENE (EBE_OBJECTID, DAT_OBJECTID, EBE_BEZEICHNUNG, EBE_BEZEICHNUNG_MITTEL_DE, EBE_BEZEICHNUNG_MITTEL_FR, EBE_BEZEICHNUNG_LANG_DE, EBE_BEZEICHNUNG_LANG_FR) VALUES (%s, %s, '%s', '%s', '%s', '%s', '%s')" % (dd_schema, self.ebe_objectid, self.dat_objectid, self.code, clean(self.ebe_bezeichnung_mittel_de), clean(self.ebe_bezeichnung_mittel_fr), clean(self.ebe_bezeichnung_lang_de), clean(self.ebe_bezeichnung_lang_fr)))
         self.sql_statements.append("INSERT INTO %s.TB_EBENE_ZEITSTAND (EZS_OBJECTID, GZS_OBJECTID, EBE_OBJECTID, LEG_OBJECTID_DE, LEG_OBJECTID_FR, EZS_REIHENFOLGE, IMP_OBJECTID, UUID, EZS_BEZEICHNUNG_MITTEL_DE, EZS_BEZEICHNUNG_MITTEL_FR, EZS_BEZEICHNUNG_LANG_DE, EZS_BEZEICHNUNG_LANG_FR, EZS_IMPORTNAME, LV95_TRANSF_METHODE, LV95_TRANSF_DS) VALUES (%s, %s, %s, %s, %s, %s, %s, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')" % (dd_schema, self.ezs_objectid, self.gzs_objectid, self.ebe_objectid, self.leg_objectid_de, self.leg_objectid_fr, self.ezs_reihenfolge, self.imp_objectid, self.uuid, clean(self.ebe_bezeichnung_mittel_de), clean(self.ebe_bezeichnung_mittel_fr), clean(self.ebe_bezeichnung_lang_de), clean(self.ebe_bezeichnung_lang_fr), self.ezs_importname, clean(self.ezs_lv95_transf_methode), clean(self.ezs_lv95_transf_ds)))
         
+        # DOKUMENTE
+        self.__get_documents()
+        
     def __get_valuetables(self, attributes):
         for attribute in attributes:
             xpatheval = etree.XPathEvaluator(attribute, namespaces=self.config['XML_NAMESPACES'])
@@ -104,7 +107,15 @@ class Layer(object):
                 if legend.leg_bezeichnung == 'STANDARD':
                     self.leg_objectid_de = legend.leg_objectid_de
                     self.leg_objectid_fr = legend.leg_objectid_fr
-
+    
+    def __get_documents(self):
+        dd_schema = self.config['DD']['schema']
+        sql = "SELECT FELDER FROM gdbp.DOKUMENT_ATTRIBUT WHERE EBENE = '" + self.code + "'"
+        result = DDSync.helpers.sql_helper.readOracleSQL(self.config['GDBP']['connection_string'], sql)
+        if len(result) > 0:
+            for row in result:
+                self.sql_statements.append("INSERT INTO %s.tb_gp_dok (DOK_ATTRIBUT, EZS_OBJECTID) VALUES ('%s', %s)" % (dd_schema, row[0], self.ezs_objectid))
+    
     def __get_ebe_objectid(self):
         ebe_objectid = "0"
         schema = self.config['DD']['schema']
