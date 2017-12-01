@@ -45,7 +45,7 @@ class Geoproduct(object):
             sys.exit()
     
     def write_sql_to_file(self, sql_filename):
-        with codecs.open(sql_filename, "w", "utf-8") as f:
+        with codecs.open(sql_filename, "a", "utf-8") as f:
             self.logger.info("Schreibe SQL-Statements in " + sql_filename)
             for sql in self.sql_statements:
                 f.write(sql + ";\n")
@@ -217,9 +217,9 @@ class Geoproduct(object):
             is_valid = False
             self.validation_messages.append("Für das Geoprodukt " + self.code + " (" + self.uuid + ") konnte aus GeoDBmeta kein XML heruntergeladen werden!")
             
-#         if DDSync.helpers.check_helper.run_checkscript_normierung(self.config, self.code, self.jahr, self.version) == False:
-#             is_valid = False
-#             self.validation_messages.append("Das Geoprodukt " + self.code + " hat das Checkscript Normierung nicht erfolgreich absolviert.")
+        if DDSync.helpers.check_helper.run_checkscript_normierung(self.config, self.code, self.jahr, self.version) == False:
+            is_valid = False
+            self.validation_messages.append("Das Geoprodukt " + self.code + " hat das Checkscript Normierung nicht erfolgreich absolviert.")
             
         return is_valid
     
