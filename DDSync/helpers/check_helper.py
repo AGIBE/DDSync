@@ -3,20 +3,17 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import arcpy
 
 def run_checkscript_normierung(config, code, jahr, version):
-    status_checkscript_normierung = True
-    
     logger = config['LOGGING']['logger']
     toolbox = config['CHECKSCRIPT_NORMIERUNG']['toolbox']
     
     arcpy.ImportToolbox(toolbox)
-    logger.info("Führe das Checkscript Normierung aus für:")
-    logger.info("Geoprodukt: " + code)
-    logger.info("Jahr: " + unicode(jahr))
-    logger.info("Version: " + unicode(version))
-    result = arcpy.CheckGeoproduct(code,jahr,version,"true","true","true","true","false")
+    result = arcpy.CheckGeoproduct_tatata(Geoprodukt=code,Jahr=jahr,Version=version,Pruefe_GeoDBProzess="true",Pruefe_Filesystem="true",Pruefe_GeoDBmeta="true",Pruefe_Geodaten="true",Pruefe_GeoDBmeta_DD="false")
 
-    print(result[0])
     if unicode(result[0]) == "true":
         status_checkscript_normierung = True
+    else:
+        status_checkscript_normierung = False
         
+    arcpy.RemoveToolbox(toolbox)
+                        
     return status_checkscript_normierung

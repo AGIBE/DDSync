@@ -7,17 +7,24 @@ import os
 def fme_runner(config, gzs_objectid):
     '''
     Ausführen des FME-Skripts für die Erstellung des Tasks im DataDictionary.
-    :param config: config des Geoproduktes
-    :param gzs_objectid: gzs_objectid aus dem DataDictionary
     '''
 
     logger = config['LOGGING']['logger']
-    fme_script = config['FME_SKRIPT']['scriptname']
+    fme_script = "CreateTaskTicket.fmw"
     
     fme_path = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..')) + "\\" + fme_script
     
     parameters = {
-        'gzs_objectid': str(gzs_objectid)
+        'database_work': str(config['GDBP']['database']),
+        'pw_gpdb': str(config['GDBP']['password']),
+        'User_gdbp': str(config['GDBP']['username']),
+        'database_team': str(config['DD']['database']),
+        'PW_geodb_dd': str(config['DD']['password']),
+        'User_geodb_dd': str(config['DD']['username']),
+        'OEREB_GPR': str(config['OEREB']['gpr']),
+        'OEREB_DATABASE': str(config['OEREB']['database']),
+        'OEREB_USERNAME': str(config['OEREB']['username']),
+        'OEREB_PASSWORD': str(config['OEREB']['password'])
     }
         
     runner = fmeobjects.FMEWorkspaceRunner()

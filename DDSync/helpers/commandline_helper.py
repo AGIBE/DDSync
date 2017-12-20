@@ -28,7 +28,7 @@ def sync_geoproduct(args):
     gpr = DDSync.Geoproduct.Geoproduct(args.GEOPRODUKT)
     gpr.write_sql_to_dd()
     # Erstellen des Tasks im DataDictionary
-    fme_helper.fme_runner(gpr.config, gpr.gzs_objectid)
+    fme_helper.fme_runner()
 
 def syncall_geoproduct(args):
     # liste alle Geoprodukte auf
@@ -36,6 +36,10 @@ def syncall_geoproduct(args):
     for gp in allgp:
         gpr = DDSync.Geoproduct.Geoproduct(gp)
         gpr.write_sql_to_dd()
+    # Erstellen des Tasks im DataDictionary
+    fme_helper.fme_runner()
+    #TODO: Ausgeben für SyncServ
+    #logger.info("SUCCESSFULL")
 
 def drysync_geoproduct(args):
     gpr = DDSync.Geoproduct.Geoproduct(args.GEOPRODUKT)
