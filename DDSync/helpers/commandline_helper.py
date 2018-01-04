@@ -51,7 +51,7 @@ def syncall_geoproduct(args):
     fme_helper.fme_runner()
     config['LOGGING']['logger'].info('Von ' + str(len(allgp)) + ' Geoprodukten wurden ' + str(cnt) + ' erfolgreich synchronisiert.')
     # Ausgabe für SyncServ
-    print("SUCCESSFULL")
+    print("SUCCESSFUL")
 
 def drysync_geoproduct(args):
     gpr = DDSync.Geoproduct.Geoproduct(args.GEOPRODUKT)

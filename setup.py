@@ -10,13 +10,14 @@ setup(
       name = "DDSync",
       packages = find_packages(),
       version = __version__,
+      package_data={'': ["*.fmw"]},
       # Abhängigkeiten
-      install_requires = ["configobj==5.0.6", "cx-Oracle==5.1.3", "requests==2.8.0", "PyMySQL==0.7.4", "lxml==3.4.4", "chromalog==1.0.4", "python-keyczar==0.715"],
+      install_requires = ["configobj==5.0.6", "cx-Oracle==5.1.3", "requests==2.8.0", "PyMySQL==0.7.4", "lxml==3.4.4", "python-keyczar==0.715"],
       # PyPI metadata
       author = "Peter Schär",
       author_email = "peter.schaer@bve.be.ch",
       description = "Synchronisation aus GeoDBmeta in das DataDictionary der GeoDB",
-      url = "http://www.be.ch/geoportal",
+      url = "https://www.be.ch/geoportal",
       entry_points={
            'console_scripts': [
                 'DDSync = DDSync.helpers.commandline_helper:main'
