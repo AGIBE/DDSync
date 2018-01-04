@@ -12,7 +12,7 @@ import sys
 
 class Geoproduct(object):
     def __init__(self, code):
-        self.config = DDSync.helpers.config_helper.get_config()
+        self.config = DDSync.helpers.config_helper.config
         self.logger = self.config['LOGGING']['logger']
         
         self.code = code.upper()
@@ -30,6 +30,10 @@ class Geoproduct(object):
 
         self.validation_messages = []
         self.is_valid = self.__validate()
+        
+        # Wegen Problemen mit dem Logging des Checkskripts muss Handler und logger nochmals definiert werden
+        self.logger.handlers = []
+        self.logger = DDSync.helpers.log_helper.init_logging(self.config)
         
         self.sql_statements = []
 

@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import arcpy
 
 def run_checkscript_normierung(config, code, jahr, version):
-    logger = config['LOGGING']['logger']
+
     toolbox = config['CHECKSCRIPT_NORMIERUNG']['toolbox']
     
     arcpy.ImportToolbox(toolbox)

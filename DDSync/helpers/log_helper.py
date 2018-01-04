@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-import chromalog
 import os
 import datetime
 
@@ -10,34 +9,19 @@ def init_logging(config):
     config['LOGGING']['log_directory'] = log_directory
     if not os.path.exists(log_directory):
         os.makedirs(log_directory)
-    logfile = os.path.join(log_directory, "DDSync" + datetime.datetime.now().strftime("_%Y_%m_%d_%H_%M_%S") + ".log")
-    config['LOGGING']['logfile'] = logfile
+    if not 'logfile' in config['LOGGING']:
+        logfile = os.path.join(log_directory, "DDSync" + datetime.datetime.now().strftime("_%Y_%m_%d_%H_%M_%S") + ".log")
+        config['LOGGING']['logfile'] = logfile
         
     logger = logging.getLogger("DDSyncLogger")
     logger.setLevel(logging.DEBUG)
     logger.handlers = []
-    logger.addHandler(create_loghandler_file(logfile))
-    logger.addHandler(create_loghandler_stream())
+    logger.addHandler(create_loghandler_file(config['LOGGING']['logfile']))
     logger.propagate = False
     
+    config['LOGGING']['logger'] = logger
+    
     return logger
-
-def create_loghandler_stream():
-    '''
-    Konfiguriert einen Stream-Loghandler. Der Output
-    wird in sys.stdout ausgegeben. In der Regel ist das
-    die Kommandozeile. Falls sys.stdout dies unterst�tzt,
-    werden Warnungen und Fehler farbig ausgegeben (dank
-    des chromalog-Moduls).
-    '''
-    
-    file_formatter = chromalog.ColorizingFormatter('%(levelname)s|%(message)s')
-    
-    h = chromalog.ColorizingStreamHandler()
-    h.setLevel(logging.DEBUG)
-    h.setFormatter(file_formatter)
-    
-    return h
     
 def create_loghandler_file(filename):
     '''

@@ -8,7 +8,7 @@ import DDSync.helpers.config_helper
 from DDSync.helpers import fme_helper
 
 def list_geoproducts(args):
-    config = DDSync.helpers.config_helper.get_config()
+    config = DDSync.helpers.config_helper.config
     syncable_gpr = []
 
     for gpr in DDSync.helpers.sql_helper.get_syncable_codes_from_gdbp(config):
@@ -33,13 +33,25 @@ def sync_geoproduct(args):
 def syncall_geoproduct(args):
     # liste alle Geoprodukte auf
     allgp = list_geoproducts(args)
+    cnt = 0
+    config = DDSync.helpers.config_helper.config
+
     for gp in allgp:
-        gpr = DDSync.Geoproduct.Geoproduct(gp)
-        gpr.write_sql_to_dd()
+        try:
+            gpr = DDSync.Geoproduct.Geoproduct(gp)
+            gpr.write_sql_to_dd()
+            config['LOGGING']['logger'].info("Erfolgreich synchronisiert. " + gp)
+            cnt += 1
+        except Exception as e:
+            config['LOGGING']['logger'].warn("Konnte nicht synchronisiert werden. " + gp)
+            config['LOGGING']['logger'].warn(e)
+            continue
+    
     # Erstellen des Tasks im DataDictionary
     fme_helper.fme_runner()
-    #TODO: Ausgeben für SyncServ
-    #logger.info("SUCCESSFULL")
+    config['LOGGING']['logger'].info('Von ' + str(len(allgp)) + ' Geoprodukten wurden ' + str(cnt) + ' erfolgreich synchronisiert.')
+    # Ausgabe für SyncServ
+    print("SUCCESSFULL")
 
 def drysync_geoproduct(args):
     gpr = DDSync.Geoproduct.Geoproduct(args.GEOPRODUKT)
@@ -48,9 +60,16 @@ def drysync_geoproduct(args):
 def drysyncall_geoproduct(args):
     # liste alle Geoprodukte auf
     allgp = list_geoproducts(args)
+    config = DDSync.helpers.config_helper.config
     for gp in allgp:
-        gpr = DDSync.Geoproduct.Geoproduct(gp)
-        gpr.write_sql_to_file(args.file)
+        try:
+            gpr = DDSync.Geoproduct.Geoproduct(gp)
+            gpr.write_sql_to_file(args.file)
+            config['LOGGING']['logger'].info("Erfolgreich in SQL-File geschrieben. " + gp)
+        except Exception as e:
+            config['LOGGING']['logger'].warn("Konnte nicht in SQL-File geschrieben werden. " + gp)
+            config['LOGGING']['logger'].warn(e)
+            continue
 
 def main():
     version_text = "DDSync v" + __version__

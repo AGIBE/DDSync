@@ -2,7 +2,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import DDSync.helpers.crypto_helper
 import DDSync.helpers.log_helper
-import avLader.helpers.connection_helper
 import configobj
 import os
 
@@ -62,17 +61,15 @@ def create_connection_string(config, key):
     
     connection_string = username + "/" + password + "@" + database
     config[key]['connection_string'] = connection_string
-    
-def get_config():
-    config = init_generalconfig()
-    
-    logger = DDSync.helpers.log_helper.init_logging(config)
-    logger.info('Konfiguration wird eingelesen.')
-    logger.info('Logfile: ' + config['LOGGING']['logfile'])
-    config['LOGGING']['logger'] = logger
 
-    # Connection-Strings zusammensetzen
-    create_connection_string(config, 'GDBP')
-    create_connection_string(config, 'DD')
-    
-    return config
+# Config wird immer eingelesen
+config = init_generalconfig()
+  
+logger_dd = DDSync.helpers.log_helper.init_logging(config)
+logger_dd.info('Konfiguration wird eingelesen.')
+logger_dd.info('Logfile: ' + config['LOGGING']['logfile'])
+
+# Connection-Strings zusammensetzen
+create_connection_string(config, 'GDBP')
+create_connection_string(config, 'DD')
+     

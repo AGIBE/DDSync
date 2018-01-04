@@ -3,12 +3,14 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import fmeobjects
 import sys
 import os
+import DDSync.helpers.config_helper
 
-def fme_runner(config, gzs_objectid):
+def fme_runner():
     '''
     Ausführen des FME-Skripts für die Erstellung des Tasks im DataDictionary.
     '''
-
+    
+    config = DDSync.helpers.config_helper.config
     logger = config['LOGGING']['logger']
     fme_script = "CreateTaskTicket.fmw"
     
@@ -28,6 +30,7 @@ def fme_runner(config, gzs_objectid):
     }
         
     runner = fmeobjects.FMEWorkspaceRunner()
+
     try:
         runner.runWithParameters(str(fme_path), parameters)
         pass
