@@ -41,7 +41,7 @@ def readMySQL(sql_statement, config):
     return result_list
 
 def get_syncable_codes_from_gdbp(config):
-    sql = "select code from gdbp.geoprodukte where ARBEITSTARTDATUM_NORMIERUNG is not null and FREIGABEDATUM_NORMIERUNG is not null and FREIGABEDATUM_GEODB_WIPPE is null order by code asc"
+    sql = "select code from gdbp.geoprodukte where GEWUENSCHTES_WIPPENDATUM like NEXT_DAY(SYSDATE,'DONNERSTAG') and ARBEITSTARTDATUM_NORMIERUNG is not null and FREIGABEDATUM_NORMIERUNG is not null and FREIGABEDATUM_GEODB_WIPPE is null order by code asc"
     codes = []
     gdbp_results = readOracleSQL(config['GDBP']['connection_string'], sql)
     for row in gdbp_results:
