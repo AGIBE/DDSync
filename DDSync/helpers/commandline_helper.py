@@ -46,7 +46,10 @@ def syncall_geoproduct(args):
             config['LOGGING']['logger'].warn("Konnte nicht synchronisiert werden. " + gp)
             config['LOGGING']['logger'].warn(e)
             continue
-    
+    # Usecase Korrektur abfangen
+    corr_gprs = DDSync.helpers.sql_helper.set_status_gp_usecase_correction(config)
+    for gpr in corr_gprs:
+        config['LOGGING']['logger'].info("Usecase Korrektur: Status von " + gpr + " wurde im DD wieder auf 1 gesetzt.")
     # Erstellen des Tasks im DataDictionary
     fme_helper.fme_runner()
     config['LOGGING']['logger'].info('Von ' + str(len(allgp)) + ' Geoprodukten wurden ' + str(cnt) + ' erfolgreich synchronisiert.')

@@ -2,6 +2,8 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import cx_Oracle
 import pymysql
+import locale
+import ctypes
 
 def readOracleSQL(connection_string, sql_statement):
     with cx_Oracle.connect(connection_string) as conn:
@@ -41,7 +43,14 @@ def readMySQL(sql_statement, config):
     return result_list
 
 def get_syncable_codes_from_gdbp(config):
-    sql = "select code from gdbp.geoprodukte where GEWUENSCHTES_WIPPENDATUM like NEXT_DAY(SYSDATE,'DONNERSTAG') and ARBEITSTARTDATUM_NORMIERUNG is not null and FREIGABEDATUM_NORMIERUNG is not null and FREIGABEDATUM_GEODB_WIPPE is null order by code asc"
+    # Server hat andere Spracheinstellung
+    user_lang = locale.windows_locale[ctypes.windll.kernel32.GetUserDefaultUILanguage()]
+    if user_lang.startswith('de'):
+        wippetag = 'DONNERSTAG'
+    else:
+        wippetag = 'THURSDAY'
+    
+    sql = "select code from gdbp.geoprodukte where GEWUENSCHTES_WIPPENDATUM like NEXT_DAY(SYSDATE,'" + wippetag + "') and ARBEITSTARTDATUM_NORMIERUNG is not null and FREIGABEDATUM_NORMIERUNG is not null and FREIGABEDATUM_GEODB_WIPPE is null order by code asc"
     codes = []
     gdbp_results = readOracleSQL(config['GDBP']['connection_string'], sql)
     for row in gdbp_results:
@@ -82,3 +91,22 @@ def clean(text):
     cleaned = text.replace("'", "''")
     return cleaned
 
+def checkfor_gp_usecase_correction(config, uuid):
+    sql = "select ID_GP_FALL from gdbp.geoprodukte where ID_GEODBMETA='" + uuid + "'"
+    res = readOracleSQL(config['GDBP']['connection_string'], sql)
+    usecase =  res[0][0]
+    return usecase
+
+def set_status_gp_usecase_correction(config):
+    corr_gpr = []
+    for gpr in get_syncable_codes_from_gdbp(config):
+        uuid = get_uuid(config, gpr)
+        usecase = checkfor_gp_usecase_correction(config, uuid)
+        # Prüfen ob Usecase Korrektur
+        if usecase == 4:
+            corr_gpr.append(gpr)
+            schema = config['DD']['schema']
+            sql = "UPDATE " + schema + ".TB_TASK SET TASK_STATUS = 1 WHERE GZS_OBJECTID = (SELECT gzs_objectid FROM " + schema + ".TB_GEOPRODUKT_ZEITSTAND where uuid = '" + uuid + "')"
+            writeOracleSQL(config['DD']['connection_string'], sql)
+            
+    return corr_gpr
