@@ -37,7 +37,7 @@ class Layer(object):
         else:
             for msg in self.validation_messages:
                 self.logger.error(msg)
-            sys.exit()
+            raise ValueError("Basis-Check der Ebene nicht bestanden.")
         
     def extract_dd_infos(self):
         xpatheval = etree.XPathEvaluator(self.xml, namespaces=self.config['XML_NAMESPACES'])
