@@ -46,7 +46,7 @@ class Geoproduct(object):
         else:
             for msg in self.validation_messages:
                 self.logger.error(msg)
-            sys.exit()
+            raise ValueError("Basis-Check nicht bestanden.")
     
     def write_sql_to_file(self, sql_filename):
         with codecs.open(sql_filename, "a", "utf-8") as f:
