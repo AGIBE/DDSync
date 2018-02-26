@@ -106,7 +106,7 @@ def set_status_gp_usecase_correction(config):
         if usecase == 4:
             corr_gpr.append(gpr)
             schema = config['DD']['schema']
-            sql = "UPDATE " + schema + ".TB_TASK SET TASK_STATUS = 1 WHERE GZS_OBJECTID = (SELECT gzs_objectid FROM " + schema + ".TB_GEOPRODUKT_ZEITSTAND where uuid = '" + uuid + "')"
+            sql = "UPDATE " + schema + ".TB_GEOPRODUKT_ZEITSTAND SET STA_OBJECTID = 1 where uuid = '" + uuid + "' and STA_OBJECTID = 9"
             writeOracleSQL(config['DD']['connection_string'], sql)
             
     return corr_gpr
