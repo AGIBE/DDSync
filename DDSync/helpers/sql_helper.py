@@ -5,11 +5,14 @@ import pymysql
 import locale
 import ctypes
 
-def readOracleSQL(connection_string, sql_statement):
+def readOracleSQL(connection_string, sql_statement, fetchall=True):
     with cx_Oracle.connect(connection_string) as conn:
         cur = conn.cursor()
         cur.execute(sql_statement)
-        result_list = cur.fetchall()
+        if fetchall:
+            result_list = cur.fetchall()
+        else:
+            result_list = cur.fetchone()
     
     return result_list
 
@@ -104,9 +107,13 @@ def set_status_gp_usecase_correction(config):
         usecase = checkfor_gp_usecase_correction(config, uuid)
         # Prüfen ob Usecase Korrektur
         if usecase == 4:
-            corr_gpr.append(gpr)
             schema = config['DD']['schema']
-            sql = "UPDATE " + schema + ".TB_GEOPRODUKT_ZEITSTAND SET STA_OBJECTID = 1 where uuid = '" + uuid + "' and STA_OBJECTID = 9"
-            writeOracleSQL(config['DD']['connection_string'], sql)
+            sql = "SELECT count(*) FROM " + schema + ".TB_GEOPRODUKT_ZEITSTAND JOIN " + schema + ".TB_TASK ON TB_GEOPRODUKT_ZEITSTAND.GZS_OBJECTID=TB_TASK.GZS_OBJECTID WHERE UC_OBJECTID=4 AND (TB_TASK.TASK_ENDE is null OR (TB_TASK.TASK_ENDE > (sysdate - 5))) AND TB_GEOPRODUKT_ZEITSTAND.UUID='" + uuid + "'"
+            res = readOracleSQL(config['DD']['connection_string'], sql, False)
+            # Prüfen, ob es bereits ein Task-Ticket gibt
+            if res[0] == 0:
+                corr_gpr.append(gpr)
+                sql = "UPDATE " + schema + ".TB_GEOPRODUKT_ZEITSTAND SET STA_OBJECTID = 1 where uuid = '" + uuid + "' and STA_OBJECTID = 9"
+                writeOracleSQL(config['DD']['connection_string'], sql)
             
     return corr_gpr
