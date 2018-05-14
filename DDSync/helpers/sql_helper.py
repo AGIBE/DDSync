@@ -2,8 +2,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import cx_Oracle
 import pymysql
-import locale
-import ctypes
 
 def readOracleSQL(connection_string, sql_statement, fetchall=True):
     with cx_Oracle.connect(connection_string) as conn:
@@ -46,14 +44,9 @@ def readMySQL(sql_statement, config):
     return result_list
 
 def get_syncable_codes_from_gdbp(config):
-    # Server hat andere Spracheinstellung
-    user_lang = locale.windows_locale[ctypes.windll.kernel32.GetUserDefaultUILanguage()]
-    if user_lang.startswith('de'):
-        wippetag = 'DONNERSTAG'
-    else:
-        wippetag = 'THURSDAY'
-    
-    sql = "select code from gdbp.geoprodukte where GEWUENSCHTES_WIPPENDATUM like NEXT_DAY(SYSDATE,'" + wippetag + "') and ARBEITSTARTDATUM_NORMIERUNG is not null and FREIGABEDATUM_NORMIERUNG is not null and FREIGABEDATUM_GEODB_WIPPE is null order by code asc"
+    # Server hat andere Spracheinstellung, diese wird teilweise durch das Checkskript beeinflusst
+    # Hack: Es wird Tagname von einem Datum eines Donnerstages ausgegeben und damit das Datum des nächsten Donnerstages ausgegeben
+    sql = "select code from gdbp.geoprodukte where GEWUENSCHTES_WIPPENDATUM like NEXT_DAY(SYSDATE, to_char( to_date( '20180510', 'yyyymmdd' ), 'day' )) and ARBEITSTARTDATUM_NORMIERUNG is not null and FREIGABEDATUM_NORMIERUNG is not null and FREIGABEDATUM_GEODB_WIPPE is null order by code asc"
     codes = []
     gdbp_results = readOracleSQL(config['GDBP']['connection_string'], sql)
     for row in gdbp_results:
