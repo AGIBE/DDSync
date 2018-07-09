@@ -38,7 +38,7 @@ def syncall_geoproduct(args):
 
     for gp in allgp:
         try:
-            gpr = DDSync.Geoproduct.Geoproduct(gp)
+            gpr = DDSync.Geoproduct.Geoproduct(gp, True)
             gpr.write_sql_to_dd()
             config['LOGGING']['logger'].info("Erfolgreich synchronisiert. " + gp)
             cnt += 1
@@ -57,7 +57,7 @@ def syncall_geoproduct(args):
     print("SUCCESSFUL")
 
 def drysync_geoproduct(args):
-    gpr = DDSync.Geoproduct.Geoproduct(args.GEOPRODUKT)
+    gpr = DDSync.Geoproduct.Geoproduct(args.GEOPRODUKT, True)
     gpr.write_sql_to_file(args.file)
 
 def drysyncall_geoproduct(args):
@@ -66,7 +66,7 @@ def drysyncall_geoproduct(args):
     config = DDSync.helpers.config_helper.config
     for gp in allgp:
         try:
-            gpr = DDSync.Geoproduct.Geoproduct(gp)
+            gpr = DDSync.Geoproduct.Geoproduct(gp, True)
             gpr.write_sql_to_file(args.file)
             config['LOGGING']['logger'].info("Erfolgreich in SQL-File geschrieben. " + gp)
         except Exception as e:
