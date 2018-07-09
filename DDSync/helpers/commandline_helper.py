@@ -25,7 +25,7 @@ def list_geoproducts(args):
     return syncable_gpr
 
 def sync_geoproduct(args):
-    gpr = DDSync.Geoproduct.Geoproduct(args.GEOPRODUKT)
+    gpr = DDSync.Geoproduct.Geoproduct(args.GEOPRODUKT, args.check)
     gpr.write_sql_to_dd()
     # Erstellen des Tasks im DataDictionary
     fme_helper.fme_runner()
@@ -86,6 +86,7 @@ def main():
     # SYNC-Befehl
     sync_parser = subparsers.add_parser('sync', help='synchronisiert das angegebene Geoprodukt in das DataDictionary.')
     sync_parser.add_argument("GEOPRODUKT", help="Geoprodukt-Code.")
+    sync_parser.add_argument("-c", "--check", default=True, help="Soll Checkskript Normierung ausgeführt werden? Default: True")
     sync_parser.set_defaults(func=sync_geoproduct)
     
     # SYNCALL-Befehl

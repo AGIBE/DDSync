@@ -11,7 +11,7 @@ from lxml import etree
 import sys
 
 class Geoproduct(object):
-    def __init__(self, code):
+    def __init__(self, code, checkskript):
         self.config = DDSync.helpers.config_helper.config
         self.logger = self.config['LOGGING']['logger']
         
@@ -29,7 +29,7 @@ class Geoproduct(object):
         self.__get_jahr_version()
 
         self.validation_messages = []
-        self.is_valid = self.__validate()
+        self.is_valid = self.__validate(checkskript)
         
         # Wegen Problemen mit dem Logging des Checkskripts muss Handler und logger nochmals definiert werden
         self.logger.handlers = []
@@ -194,7 +194,7 @@ class Geoproduct(object):
         the_objectid =  unicode(res[0][0])
         return the_objectid
 
-    def __validate(self):
+    def __validate(self, checkskript):
         is_valid = True
         
         if DDSync.helpers.sql_helper.uuid_exists_in_dd(self.config, self.uuid):
@@ -221,10 +221,12 @@ class Geoproduct(object):
             is_valid = False
             self.validation_messages.append("Für das Geoprodukt " + self.code + " (" + self.uuid + ") konnte aus GeoDBmeta kein XML heruntergeladen werden!")
             
-        if DDSync.helpers.check_helper.run_checkscript_normierung(self.config, self.code, self.jahr, self.version) == False:
-            is_valid = False
-            self.validation_messages.append("Das Geoprodukt " + self.code + " hat das Checkscript Normierung nicht erfolgreich absolviert.")
-            
+        if checkskript is True:
+            if DDSync.helpers.check_helper.run_checkscript_normierung(self.config, self.code, self.jahr, self.version) == False:
+                is_valid = False
+                self.validation_messages.append("Das Geoprodukt " + self.code + " hat das Checkscript Normierung nicht erfolgreich absolviert.")
+        else:
+            self.logger.info("Das Checkskript Normierung wurde nicht ausgefuehrt.")    
         return is_valid
     
     def __collect_sql_statements(self):
