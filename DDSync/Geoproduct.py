@@ -90,7 +90,9 @@ class Geoproduct(object):
         self.gzs_version = unicode(xpatheval("string(/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/bee:version/bee:DD_DataDictionary/bee:versionNumber/gco:Decimal)"))
         self.gzs_klassifikation = unicode(xpatheval("string(/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:resourceConstraints/gmd:MD_LegalConstraints/gmd:otherConstraints/gco:CharacterString)"))[0]
         if len(xpatheval("string(/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:resourceConstraints/gmd:MD_LegalConstraints/gmd:otherConstraints/gco:CharacterString)")) > 0:
-            self.gzs_klassifikation = unicode(xpatheval("string(/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:resourceConstraints/gmd:MD_LegalConstraints/gmd:otherConstraints/gco:CharacterString)"))[0]
+            # Mapping der Nutzungsbedingungen zu Themenlader-Codes (ehemalige Nutzungsbedingungscodes)
+            gzs_kl = unicode(xpatheval("string(/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:resourceConstraints/gmd:MD_LegalConstraints/gmd:otherConstraints/gco:CharacterString)"))
+            self.gzs_klassifikation = self.config['NUTZUNGSBEDINGUNGEN_MAPPING'][gzs_kl]
         self.gzs_bezeichnung_mittel_de = self.gpr_bezeichnung_mittel_de
         self.gzs_bezeichnung_mittel_fr = self.gpr_bezeichnung_mittel_fr
         self.gzs_bezeichnung_lang_de = self.gpr_bezeichnung_lang_de
