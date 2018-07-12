@@ -80,8 +80,12 @@ class Geoproduct(object):
         self.gpr_bezeichnung_mittel_de = unicode(xpatheval("string(/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:title/gco:CharacterString)"))
         self.gpr_bezeichnung_mittel_fr = unicode(xpatheval("string(/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:title/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString)"))
         self.gpr_bezeichnung_lang_de = unicode(xpatheval("string(/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:otherCitationDetails/gco:CharacterString)"))
+        if not self.gpr_bezeichnung_lang_de.startswith(self.code):
+            self.gpr_bezeichnung_lang_de = self.code + ': ' + self.gpr_bezeichnung_lang_de
         self.gpr_bezeichnung_lang_fr = unicode(xpatheval("string(/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:otherCitationDetails/gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString/text())"))
-        
+        if not self.gpr_bezeichnung_lang_fr.startswith(self.code):
+            self.gpr_bezeichnung_lang_fr = self.code + ': ' + self.gpr_bezeichnung_lang_fr
+            
         # TB_GEOPRODUKT_ZEITSTAND
         self.gzs_objectid = DDSync.helpers.sql_helper.get_dd_sequence_number(self.config)
         dates = xpatheval("/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:citation/gmd:CI_Citation/gmd:date")
