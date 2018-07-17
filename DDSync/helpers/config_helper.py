@@ -4,6 +4,10 @@ import DDSync.helpers.crypto_helper
 import DDSync.helpers.log_helper
 import configobj
 import os
+from DDSync.__init__ import __version__        
+import csv
+import getpass
+import datetime
 
 def decrypt_passwords(section, key):
     '''
@@ -72,4 +76,19 @@ logger_dd.info('Logfile: ' + config['LOGGING']['logfile'])
 # Connection-Strings zusammensetzen
 create_connection_string(config, 'GDBP')
 create_connection_string(config, 'DD')
-     
+
+# Installation zentral registrieren
+# csv-File
+instfile = config['INSTALLATION']['instreg']
+usrlist = []
+usr = getpass.getuser()
+# csv einlesen
+with open(instfile, 'rb') as csvfile:
+    spamreader = csv.reader(csvfile, delimiter=str(u';'))
+    for row in spamreader:
+        usrlist.append([row[0], row[1]])
+# csv allenfalls ergaenzen
+if not [__version__, usr] in usrlist:
+    with open(instfile, 'ab') as csvfile:
+        spamwriter = csv.writer(csvfile, delimiter=str(u';'))
+        spamwriter.writerow([__version__ , usr, datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")])
