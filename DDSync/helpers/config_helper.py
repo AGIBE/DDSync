@@ -83,16 +83,17 @@ try:
     instfile = config['INSTALLATION']['instreg']
     usrlist = []
     usr = getpass.getuser()
+    pc = os.environ['COMPUTERNAME']
     # csv einlesen
     with open(instfile, 'rb') as csvfile:
         spamreader = csv.reader(csvfile, delimiter=str(u';'))
         for row in spamreader:
-            usrlist.append([row[0], row[1]])
+            usrlist.append([row[0], row[1], row[2]])
     # csv allenfalls ergaenzen
-    if not [__version__, usr] in usrlist:
+    if not [__version__, usr, pc] in usrlist:
         with open(instfile, 'ab') as csvfile:
             spamwriter = csv.writer(csvfile, delimiter=str(u';'))
-            spamwriter.writerow([__version__ , usr, datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")])
+            spamwriter.writerow([__version__ , usr, pc, datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")])
 except Exception as e:
     logger_dd.warn('Installationsversion konnte nicht zentral abgelegt werden. ' + e)
     pass
