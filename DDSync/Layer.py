@@ -101,10 +101,22 @@ class Layer(object):
             # Es wird erst einmal die allererste Legende als Standard-Legende ausgewählt.
             self.leg_objectid_de = self.legends[0].leg_objectid_de
             self.leg_objectid_fr = self.legends[0].leg_objectid_fr
-            # Sollte es eine Legende haben, die STANDARD heisst, dann wird diese als
-            # Standard-Legende gewählt.
+            # Sollte es eine Legende haben, die kMGDM1 heisst, dann wird diese als
+            # Standard-Legende gewählt, ansonsten KMGDM, dann STANDARD, dann MGDM.
+            for legend in self.legends:
+                if legend.leg_bezeichnung == 'MGDM':
+                    self.leg_objectid_de = legend.leg_objectid_de
+                    self.leg_objectid_fr = legend.leg_objectid_fr
             for legend in self.legends:
                 if legend.leg_bezeichnung == 'STANDARD':
+                    self.leg_objectid_de = legend.leg_objectid_de
+                    self.leg_objectid_fr = legend.leg_objectid_fr
+            for legend in self.legends:
+                if legend.leg_bezeichnung == 'KMGDM':
+                    self.leg_objectid_de = legend.leg_objectid_de
+                    self.leg_objectid_fr = legend.leg_objectid_fr
+            for legend in self.legends:
+                if legend.leg_bezeichnung == 'kMGDM1':
                     self.leg_objectid_de = legend.leg_objectid_de
                     self.leg_objectid_fr = legend.leg_objectid_fr
     
