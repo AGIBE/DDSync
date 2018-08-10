@@ -97,6 +97,14 @@ class Geoproduct(object):
             # Mapping der Nutzungsbedingungen zu Themenlader-Codes (ehemalige Nutzungsbedingungscodes)
             gzs_kl = unicode(xpatheval("string(/csw:GetRecordByIdResponse/gmd:MD_Metadata/gmd:identificationInfo/gmd:MD_DataIdentification/gmd:resourceConstraints/gmd:MD_LegalConstraints/gmd:otherConstraints/gco:CharacterString)"))
             self.gzs_klassifikation = self.config['NUTZUNGSBEDINGUNGEN_MAPPING'][gzs_kl]
+            # Temporaer bis Normierung Nutzungsbedingungen korrigiert hat
+            # Es wird überprüft, ob GP in GeoDBProzess einer Rolle zugewiesen ist
+            if self.gzs_klassifikation == '2':
+                sql = "select db_rollen from gdbp.geoprodukte where code='" + self.code + "' and zeitstand_jahr=" + self.gzs_jahr + " and zeitstand_version=" + self.gzs_version
+                result = DDSync.helpers.sql_helper.readOracleSQL(self.config['GDBP']['connection_string'], sql)
+                if result[0][0] is None:
+                    # kein kantonsintern geschütztes GP
+                    self.gzs_klassifikation = '4'
         self.gzs_bezeichnung_mittel_de = self.gpr_bezeichnung_mittel_de
         self.gzs_bezeichnung_mittel_fr = self.gpr_bezeichnung_mittel_fr
         self.gzs_bezeichnung_lang_de = self.gpr_bezeichnung_lang_de
