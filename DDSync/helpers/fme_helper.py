@@ -4,6 +4,7 @@ import fmeobjects
 import sys
 import os
 import DDSync.helpers.config_helper
+import DDSync.helpers.sql_helper
 
 def fme_runner():
     '''
@@ -13,6 +14,11 @@ def fme_runner():
     config = DDSync.helpers.config_helper.config
     logger = config['LOGGING']['logger']
     fme_script = "CreateTaskTicket.fmw"
+
+    oereb_gpr_sql = "select 1 as id, LISTAGG(to_char(gprcode), ',') WITHIN GROUP (order by gprcode) gprcode from WORKFLOW_GPR group by 1"
+
+    oereb_gpr_result = DDSync.helpers.sql_helper.readOracleSQL(config['OEREB']['connection_string'], oereb_gpr_sql)
+    oereb_gpr = oereb_gpr_result[0][1]
     
     fme_path = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..')) + "\\" + fme_script
     
@@ -23,7 +29,7 @@ def fme_runner():
         'database_team': str(config['DD']['database']),
         'PW_geodb_dd': str(config['DD']['password']),
         'User_geodb_dd': str(config['DD']['username']),
-        'OEREB_GPR': str(config['OEREB']['gpr']),
+        'OEREB_GPR': str(oereb_gpr),
         'OEREB_DATABASE': str(config['OEREB']['database']),
         'OEREB_USERNAME': str(config['OEREB']['username']),
         'OEREB_PASSWORD': str(config['OEREB']['password'])

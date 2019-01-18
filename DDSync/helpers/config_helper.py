@@ -76,6 +76,7 @@ logger_dd.info('Logfile: ' + config['LOGGING']['logfile'])
 # Connection-Strings zusammensetzen
 create_connection_string(config, 'GDBP')
 create_connection_string(config, 'DD')
+create_connection_string(config, 'OEREB')
 
 # Installation zentral registrieren
 # csv-File
