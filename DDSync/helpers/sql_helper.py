@@ -45,10 +45,14 @@ def readMySQL(sql_statement, config):
     
     return result_list
 
-def get_syncable_codes_from_gdbp(config):
+def get_syncable_codes_from_gdbp(config, nextwippe):
     # Server hat andere Spracheinstellung, diese wird teilweise durch das Checkskript beeinflusst
     # Hack: Es wird Tagname von einem Datum eines Donnerstages ausgegeben und damit das Datum des nächsten Donnerstages ausgegeben
-    sql = "select code from gdbp.geoprodukte where GEWUENSCHTES_WIPPENDATUM like NEXT_DAY(SYSDATE, to_char( to_date( '20180510', 'yyyymmdd' ), 'day' )) and ARBEITSTARTDATUM_NORMIERUNG is not null and FREIGABEDATUM_NORMIERUNG is not null and FREIGABEDATUM_GEODB_WIPPE is null order by code asc"
+    if nextwippe is True:
+        sql = "select code from gdbp.geoprodukte where GEWUENSCHTES_WIPPENDATUM like NEXT_DAY(SYSDATE, to_char( to_date( '20180510', 'yyyymmdd' ), 'day' )) and ARBEITSTARTDATUM_NORMIERUNG is not null and FREIGABEDATUM_NORMIERUNG is not null and FREIGABEDATUM_GEODB_WIPPE is null order by code asc"
+    else:
+        # Es wird nicht geprüft, ob GP auf der nächsten Wippe ist. Wird verwendet, wenn z.B. über Jahreswechsel lange keine Wippe stattfindet und trotztdem Import werden soll.
+        sql = "select code from gdbp.geoprodukte where ARBEITSTARTDATUM_NORMIERUNG is not null and FREIGABEDATUM_NORMIERUNG is not null and FREIGABEDATUM_GEODB_WIPPE is null order by code asc"
     codes = []
     gdbp_results = readOracleSQL(config['GDBP']['connection_string'], sql)
     for row in gdbp_results:

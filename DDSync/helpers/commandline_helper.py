@@ -25,7 +25,7 @@ def list_geoproducts(args):
     return syncable_gpr
 
 def sync_geoproduct(args):
-    gpr = DDSync.Geoproduct.Geoproduct(args.GEOPRODUKT, args.check)
+    gpr = DDSync.Geoproduct.Geoproduct(args.GEOPRODUKT, args.check, args.nextwippe)
     gpr.write_sql_to_dd()
     # Erstellen des Tasks im DataDictionary
     fme_helper.fme_runner()
@@ -38,7 +38,7 @@ def syncall_geoproduct(args):
 
     for gp in allgp:
         try:
-            gpr = DDSync.Geoproduct.Geoproduct(gp, True)
+            gpr = DDSync.Geoproduct.Geoproduct(gp, True, True)
             gpr.write_sql_to_dd()
             config['LOGGING']['logger'].info("Erfolgreich synchronisiert. " + gp)
             cnt += 1
@@ -57,7 +57,7 @@ def syncall_geoproduct(args):
     print("SUCCESSFUL")
 
 def drysync_geoproduct(args):
-    gpr = DDSync.Geoproduct.Geoproduct(args.GEOPRODUKT, True)
+    gpr = DDSync.Geoproduct.Geoproduct(args.GEOPRODUKT, True, False)
     gpr.write_sql_to_file(args.file)
 
 def drysyncall_geoproduct(args):
@@ -66,7 +66,7 @@ def drysyncall_geoproduct(args):
     config = DDSync.helpers.config_helper.config
     for gp in allgp:
         try:
-            gpr = DDSync.Geoproduct.Geoproduct(gp, True)
+            gpr = DDSync.Geoproduct.Geoproduct(gp, True, True)
             gpr.write_sql_to_file(args.file)
             config['LOGGING']['logger'].info("Erfolgreich in SQL-File geschrieben. " + gp)
         except Exception as e:
@@ -87,6 +87,7 @@ def main():
     sync_parser = subparsers.add_parser('sync', help='synchronisiert das angegebene Geoprodukt in das DataDictionary.')
     sync_parser.add_argument("GEOPRODUKT", help="Geoprodukt-Code.")
     sync_parser.add_argument("-c", "--check", default=True, help="Soll Checkskript Normierung ausgeführt werden? Default: True")
+    sync_parser.add_argument("-w", "--nextwippe", default=True, help="Soll geprüft werden, ob GP auf der nächsten Wippe ist? Default: True")
     sync_parser.set_defaults(func=sync_geoproduct)
     
     # SYNCALL-Befehl

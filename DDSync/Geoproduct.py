@@ -8,10 +8,10 @@ import DDSync.Layer
 import requests
 import codecs
 from lxml import etree
-import sys
+
 
 class Geoproduct(object):
-    def __init__(self, code, checkskript):
+    def __init__(self, code, checkskript, nextwippe):
         self.config = DDSync.helpers.config_helper.config
         self.logger = self.config['LOGGING']['logger']
         
@@ -29,7 +29,9 @@ class Geoproduct(object):
         self.__get_jahr_version()
 
         self.validation_messages = []
-        self.is_valid = self.__validate(checkskript)
+        self.nextwippe = nextwippe
+        self.checkskript = checkskript
+        self.is_valid = self.__validate()
         
         # Wegen Problemen mit dem Logging des Checkskripts muss Handler und logger nochmals definiert werden
         self.logger.handlers = []
@@ -208,14 +210,14 @@ class Geoproduct(object):
         the_objectid =  unicode(res[0][0])
         return the_objectid
 
-    def __validate(self, checkskript):
+    def __validate(self):
         is_valid = True
         
         if DDSync.helpers.sql_helper.uuid_exists_in_dd(self.config, self.uuid):
             is_valid = False
             self.validation_messages.append("Der Zeitstand existiert bereits im DataDictionary!")
         
-        if self.code not in DDSync.helpers.sql_helper.get_syncable_codes_from_gdbp(self.config):
+        if self.code not in DDSync.helpers.sql_helper.get_syncable_codes_from_gdbp(self.config, self.nextwippe):
             is_valid = False
             self.validation_messages.append("Das Geoprodukt " + self.code + " ist in GeoDBProzess nicht für den Import freigegeben!")
         
@@ -223,7 +225,7 @@ class Geoproduct(object):
             is_valid = False
             self.validation_messages.append("Für das Geoprodukt " + self.code + " konnte in GeoDBProzess keine UUID ermittelt werden!")
             
-        if self.gdbm_status <> "Published":
+        if self.gdbm_status != "Published":
             is_valid = False
             self.validation_messages.append("Das Geoprodukt " + self.code + " (" + self.uuid + ") hat in GeoDBmeta nicht den Status 'Published'!")
             
@@ -235,7 +237,7 @@ class Geoproduct(object):
             is_valid = False
             self.validation_messages.append("Für das Geoprodukt " + self.code + " (" + self.uuid + ") konnte aus GeoDBmeta kein XML heruntergeladen werden!")
             
-        if checkskript is True:
+        if self.checkskript is True:
             if DDSync.helpers.check_helper.run_checkscript_normierung(self.config, self.code, self.jahr, self.version) == False:
                 is_valid = False
                 self.validation_messages.append("Das Geoprodukt " + self.code + " hat das Checkscript Normierung nicht erfolgreich absolviert.")
