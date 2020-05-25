@@ -99,9 +99,9 @@ def checkfor_gp_usecase_correction(config, uuid):
     usecase =  res[0][0]
     return usecase
 
-def set_status_gp_usecase_correction(config):
+def set_status_gp_usecase_correction(config, nextwippe):
     corr_gpr = []
-    for gpr in get_syncable_codes_from_gdbp(config):
+    for gpr in get_syncable_codes_from_gdbp(config, nextwippe):
         uuid = get_uuid(config, gpr)
         usecase = checkfor_gp_usecase_correction(config, uuid)
         # Prüfen ob Usecase Korrektur

@@ -11,7 +11,7 @@ def list_geoproducts(args):
     config = DDSync.helpers.config_helper.config
     syncable_gpr = []
 
-    for gpr in DDSync.helpers.sql_helper.get_syncable_codes_from_gdbp(config):
+    for gpr in DDSync.helpers.sql_helper.get_syncable_codes_from_gdbp(config, True):
         uuid = DDSync.helpers.sql_helper.get_uuid(config, gpr)
         if not DDSync.helpers.sql_helper.uuid_exists_in_dd(config, uuid):
             syncable_gpr.append(gpr)
@@ -35,10 +35,11 @@ def syncall_geoproduct(args):
     allgp = list_geoproducts(args)
     cnt = 0
     config = DDSync.helpers.config_helper.config
+    nextwippe = True
 
     for gp in allgp:
         try:
-            gpr = DDSync.Geoproduct.Geoproduct(gp, True, True)
+            gpr = DDSync.Geoproduct.Geoproduct(gp, True, nextwippe)
             gpr.write_sql_to_dd()
             config['LOGGING']['logger'].info("Erfolgreich synchronisiert. " + gp)
             cnt += 1
@@ -47,7 +48,7 @@ def syncall_geoproduct(args):
             config['LOGGING']['logger'].warn(e)
             continue
     # Usecase Korrektur abfangen
-    corr_gprs = DDSync.helpers.sql_helper.set_status_gp_usecase_correction(config)
+    corr_gprs = DDSync.helpers.sql_helper.set_status_gp_usecase_correction(config, nextwippe)
     for gpr in corr_gprs:
         config['LOGGING']['logger'].info("Usecase Korrektur: Status von " + gpr + " wurde im DD wieder auf 1 gesetzt.")
     # Erstellen des Tasks im DataDictionary
