@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import cx_Oracle
 import pymysql
+import psycopg2
 
 def readOracleSQL(connection_string, sql_statement, fetchall=True):
     with cx_Oracle.connect(connection_string) as conn:
@@ -27,6 +28,15 @@ def writeOracleSQL_multiple(connection_string, sql_statements):
         for sql_statement in sql_statements:
             cur.execute(sql_statement)
  
+def readPostgreSQL(connection_string, sql_statement, fetchall=True):
+    with psycopg2.connect(connection_string) as conn:
+        cur = conn.cursor()
+        cur.execute(sql_statement)
+        if fetchall:
+            result = cur.fetchall()
+        else:
+            result = cur.fetchone()
+    return result
 
 def readMySQL(sql_statement, config):
     username = config['MYSQL']['username']

@@ -66,6 +66,10 @@ def create_connection_string(config, key):
     connection_string = username + "/" + password + "@" + database
     config[key]['connection_string'] = connection_string
 
+def create_connection_string_pg(config, key):
+    conn_string = "host='%s' dbname='%s' port=%s user='%s' password='%s'" % (config[key]['host'], config[key]['database'], config[key]['port'], config[key]['username'], config[key]['password'])
+    config[key]['connection_string'] = conn_string
+
 # Config wird immer eingelesen
 config = init_generalconfig()
   
@@ -77,6 +81,7 @@ logger_dd.info('Logfile: ' + config['LOGGING']['logfile'])
 create_connection_string(config, 'GDBP')
 create_connection_string(config, 'DD')
 create_connection_string(config, 'OEREB')
+create_connection_string_pg(config, 'POSTGRESQL')
 
 # Installation zentral registrieren
 # csv-File

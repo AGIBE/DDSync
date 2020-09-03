@@ -15,9 +15,9 @@ def fme_runner():
     logger = config['LOGGING']['logger']
     fme_script = "CreateTaskTicket.fmw"
 
-    oereb_gpr_sql = "select 1 as id, LISTAGG(to_char(gprcode), ',') WITHIN GROUP (order by gprcode) gprcode from WORKFLOW_GPR group by 1"
+    oereb_gpr_sql = "select 1 as id, string_agg(oereb.workflow_gpr.gprcode , ',' order by oereb.workflow_gpr.gprcode) as gprcode from oereb.workflow_gpr group by 1"
 
-    oereb_gpr_result = DDSync.helpers.sql_helper.readOracleSQL(config['OEREB']['connection_string'], oereb_gpr_sql)
+    oereb_gpr_result = DDSync.helpers.sql_helper.readPostgreSQL(config['POSTGRESQL']['connection_string'], oereb_gpr_sql)
     oereb_gpr = oereb_gpr_result[0][1]
     
     fme_path = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..')) + "\\" + fme_script
@@ -30,9 +30,11 @@ def fme_runner():
         'PW_geodb_dd': str(config['DD']['password']),
         'User_geodb_dd': str(config['DD']['username']),
         'OEREB_GPR': str(oereb_gpr),
-        'OEREB_DATABASE': str(config['OEREB']['database']),
-        'OEREB_USERNAME': str(config['OEREB']['username']),
-        'OEREB_PASSWORD': str(config['OEREB']['password'])
+        'OEREB_DATABASE': str(config['POSTGRESQL']['database']),
+        'OEREB_USERNAME': str(config['POSTGRESQL']['username']),
+        'OEREB_PASSWORD': str(config['POSTGRESQL']['password']),
+        'OEREB_PORT': str(config['POSTGRESQL']['port']),
+        'OEREB_HOST': str(config['POSTGRESQL']['host']),
     }
         
     runner = fmeobjects.FMEWorkspaceRunner()
