@@ -8,12 +8,21 @@ import DDSync.Layer
 import requests
 import codecs
 from lxml import etree
+import AGILib.agilogger as al
 
 
 class Geoproduct(object):
     def __init__(self, code, checkskript, nextwippe):
         self.config = DDSync.helpers.config_helper.config
-        self.logger = self.config['LOGGING']['logger']
+        log_dir = self.config['LOGGING']['basedir']
+        logfile_name = 'DDSync.log'
+        self.logger = al.initialize_agilogger(
+            logfile_name=logfile_name,
+            logfile_folder=log_dir,
+            list_log_handler=['file', 'stream'],
+            archive=True,
+            logger_name='AGILogger'
+        )
         
         self.code = code.upper()
         self.logger.info("Starte Synchronisierung des Geoprodukts " + self.code)
@@ -34,8 +43,8 @@ class Geoproduct(object):
         self.is_valid = self.__validate()
         
         # Wegen Problemen mit dem Logging des Checkskripts muss Handler und logger nochmals definiert werden
-        self.logger.handlers = []
-        self.logger = DDSync.helpers.log_helper.init_logging(self.config)
+        #self.logger.handlers = []
+        #self.logger = DDSync.helpers.log_helper.init_logging(self.config)
         
         self.sql_statements = []
 
