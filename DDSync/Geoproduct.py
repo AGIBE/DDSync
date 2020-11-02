@@ -8,22 +8,12 @@ import DDSync.Layer
 import requests
 import codecs
 from lxml import etree
-import AGILib.agilogger as al
 
 
 class Geoproduct(object):
-    def __init__(self, code, checkskript, nextwippe):
+    def __init__(self, code, checkskript, nextwippe, logger):
         self.config = DDSync.helpers.config_helper.config
-        log_dir = self.config['LOGGING']['basedir']
-        logfile_name = 'DDSync.log'
-        self.logger = al.initialize_agilogger(
-            logfile_name=logfile_name,
-            logfile_folder=log_dir,
-            list_log_handler=['file', 'stream'],
-            archive=True,
-            logger_name='AGILogger'
-        )
-        
+        self.logger = logger
         self.code = code.upper()
         self.logger.info("Starte Synchronisierung des Geoprodukts " + self.code)
         
@@ -163,7 +153,7 @@ class Geoproduct(object):
         gdbm_results = DDSync.helpers.sql_helper.readMySQL(sql, self.config)
         if len(gdbm_results) > 0:
             for gdbm_result in gdbm_results:
-                layer = DDSync.Layer.Layer(gdbm_result[0], gdbm_result[1], gdbm_result[2], self.gzs_objectid, self.code, self.config)
+                layer = DDSync.Layer.Layer(gdbm_result[0], gdbm_result[1], gdbm_result[2], self.gzs_objectid, self.code, self.config, self.logger)
                 layers.append(layer)
 
         return layers

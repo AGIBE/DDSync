@@ -6,6 +6,7 @@ import DDSync.Geoproduct
 import DDSync.helpers.sql_helper
 import DDSync.helpers.config_helper
 from DDSync.helpers import fme_helper
+import AGILib.agilogger as al
 
 def list_geoproducts(args):
     config = DDSync.helpers.config_helper.config
@@ -25,10 +26,21 @@ def list_geoproducts(args):
     return syncable_gpr
 
 def sync_geoproduct(args):
-    gpr = DDSync.Geoproduct.Geoproduct(args.GEOPRODUKT, args.check, args.nextwippe)
+    config = DDSync.helpers.config_helper.config
+    log_dir = config['LOGGING']['basedir']
+    logfile_name = 'DDSync.log'
+    logger = al.initialize_agilogger(
+        logfile_name=logfile_name,
+        logfile_folder=log_dir,
+        list_log_handler=['file', 'stream'],
+        archive=True,
+        logger_name='AGILogger'
+    )
+    logger.info('Folgendes GP wird synchronisiert: {}'.format(args.GEOPRODUKT))
+    gpr = DDSync.Geoproduct.Geoproduct(args.GEOPRODUKT, args.check, args.nextwippe, logger)
     gpr.write_sql_to_dd()
     # Erstellen des Tasks im DataDictionary
-    fme_helper.fme_runner()
+    fme_helper.fme_runner(logger)
 
 def syncall_geoproduct(args):
     # liste alle Geoprodukte auf
@@ -37,42 +49,71 @@ def syncall_geoproduct(args):
     config = DDSync.helpers.config_helper.config
     nextwippe = True
 
+    log_dir = config['LOGGING']['basedir']
+    logfile_name = 'DDSync.log'
+    logger = al.initialize_agilogger(
+        logfile_name=logfile_name,
+        logfile_folder=log_dir,
+        list_log_handler=['file', 'stream'],
+        archive=True,
+        logger_name='AGILogger'
+    )
+    logger.info('Folgende GP werden synchronisiert: {}'.format(allgp))
     for gp in allgp:
         try:
-            gpr = DDSync.Geoproduct.Geoproduct(gp, True, nextwippe)
+            gpr = DDSync.Geoproduct.Geoproduct(gp, True, nextwippe, logger)
             gpr.write_sql_to_dd()
-            config['LOGGING']['logger'].info("Erfolgreich synchronisiert. " + gp)
+            logger.info("Erfolgreich synchronisiert. " + gp)
             cnt += 1
         except Exception as e:
-            config['LOGGING']['logger'].warn("Konnte nicht synchronisiert werden. " + gp)
-            config['LOGGING']['logger'].warn(e)
+            logger.warn("Konnte nicht synchronisiert werden. " + gp)
+            logger.warn(e)
             continue
     # Usecase Korrektur abfangen
     corr_gprs = DDSync.helpers.sql_helper.set_status_gp_usecase_correction(config, nextwippe)
     for gpr in corr_gprs:
-        config['LOGGING']['logger'].info("Usecase Korrektur: Status von " + gpr + " wurde im DD wieder auf 1 gesetzt.")
+        logger.info("Usecase Korrektur: Status von " + gpr + " wurde im DD wieder auf 1 gesetzt.")
     # Erstellen des Tasks im DataDictionary
-    fme_helper.fme_runner()
-    config['LOGGING']['logger'].info('Von ' + str(len(allgp)) + ' Geoprodukten wurden ' + str(cnt) + ' erfolgreich synchronisiert.')
+    fme_helper.fme_runner(logger)
+    logger.info('Von ' + str(len(allgp)) + ' Geoprodukten wurden ' + str(cnt) + ' erfolgreich synchronisiert.')
     # Ausgabe für SyncServ
     print("SUCCESSFUL")
 
 def drysync_geoproduct(args):
-    gpr = DDSync.Geoproduct.Geoproduct(args.GEOPRODUKT, True, False)
+    config = DDSync.helpers.config_helper.config
+    log_dir = config['LOGGING']['basedir']
+    logfile_name = 'DDSync.log'
+    logger = al.initialize_agilogger(
+        logfile_name=logfile_name,
+        logfile_folder=log_dir,
+        list_log_handler=['file', 'stream'],
+        archive=True,
+        logger_name='AGILogger'
+    )
+    gpr = DDSync.Geoproduct.Geoproduct(args.GEOPRODUKT, True, False, logger)
     gpr.write_sql_to_file(args.file)
 
 def drysyncall_geoproduct(args):
     # liste alle Geoprodukte auf
     allgp = list_geoproducts(args)
     config = DDSync.helpers.config_helper.config
+    log_dir = config['LOGGING']['basedir']
+    logfile_name = 'DDSync.log'
+    logger = al.initialize_agilogger(
+        logfile_name=logfile_name,
+        logfile_folder=log_dir,
+        list_log_handler=['file', 'stream'],
+        archive=True,
+        logger_name='AGILogger'
+    )
     for gp in allgp:
         try:
-            gpr = DDSync.Geoproduct.Geoproduct(gp, True, True)
+            gpr = DDSync.Geoproduct.Geoproduct(gp, True, True, logger)
             gpr.write_sql_to_file(args.file)
-            config['LOGGING']['logger'].info("Erfolgreich in SQL-File geschrieben. " + gp)
+            logger.info("Erfolgreich in SQL-File geschrieben. " + gp)
         except Exception as e:
-            config['LOGGING']['logger'].warn("Konnte nicht in SQL-File geschrieben werden. " + gp)
-            config['LOGGING']['logger'].warn(e)
+            logger.warn("Konnte nicht in SQL-File geschrieben werden. " + gp)
+            logger.warn(e)
             continue
 
 def main():

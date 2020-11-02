@@ -73,9 +73,9 @@ def create_connection_string_pg(config, key):
 # Config wird immer eingelesen
 config = init_generalconfig()
   
-logger_dd = DDSync.helpers.log_helper.init_logging(config)
-logger_dd.info('Konfiguration wird eingelesen.')
-logger_dd.info('Logfile: ' + config['LOGGING']['logfile'])
+#logger_dd = DDSync.helpers.log_helper.init_logging(config)
+#logger_dd.info('Konfiguration wird eingelesen.')
+#logger_dd.info('Logfile: ' + config['LOGGING']['logfile'])
 
 # Connection-Strings zusammensetzen
 create_connection_string(config, 'GDBP')
@@ -83,23 +83,3 @@ create_connection_string(config, 'DD')
 create_connection_string(config, 'OEREB')
 create_connection_string_pg(config, 'POSTGRESQL')
 
-# Installation zentral registrieren
-# csv-File
-try:
-    instfile = config['INSTALLATION']['instreg']
-    usrlist = []
-    usr = getpass.getuser()
-    pc = os.environ['COMPUTERNAME']
-    # csv einlesen
-    with open(instfile, 'rb') as csvfile:
-        spamreader = csv.reader(csvfile, delimiter=str(u';'))
-        for row in spamreader:
-            usrlist.append([row[0], row[1], row[2]])
-    # csv allenfalls ergaenzen
-    if not [__version__, usr, pc] in usrlist:
-        with open(instfile, 'ab') as csvfile:
-            spamwriter = csv.writer(csvfile, delimiter=str(u';'))
-            spamwriter.writerow([__version__ , usr, pc, datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")])
-except Exception as e:
-    logger_dd.warn('Installationsversion konnte nicht zentral abgelegt werden. ' + e)
-    pass

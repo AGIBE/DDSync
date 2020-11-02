@@ -6,13 +6,13 @@ import os
 import DDSync.helpers.config_helper
 import DDSync.helpers.sql_helper
 
-def fme_runner():
+def fme_runner(logger):
     '''
     Ausführen des FME-Skripts für die Erstellung des Tasks im DataDictionary.
     '''
     
     config = DDSync.helpers.config_helper.config
-    logger = config['LOGGING']['logger']
+    logger = logger
     fme_script = "CreateTaskTicket.fmw"
 
     oereb_gpr_sql = "select 1 as id, string_agg(oereb.workflow_gpr.gprcode , ',' order by oereb.workflow_gpr.gprcode) as gprcode from oereb.workflow_gpr group by 1"

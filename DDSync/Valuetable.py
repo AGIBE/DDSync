@@ -5,13 +5,13 @@ import DDSync.helpers.sql_helper
 from DDSync.helpers.sql_helper import clean
 
 class Valuetable(object):
-    def __init__(self, valuetable_xml, attribute_name, ezs_objectid, config):
+    def __init__(self, valuetable_xml, attribute_name, ezs_objectid, config, logger):
         self.config = config
         self.xml = valuetable_xml
         self.wtb_join_foreignkey = attribute_name
         self.ezs_objectid = ezs_objectid
         
-        self.logger = self.config['LOGGING']['logger']
+        self.logger = logger
         
         self.sql_statements = []
         

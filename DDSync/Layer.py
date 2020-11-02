@@ -11,7 +11,7 @@ import arcpy
 import sys
 
 class Layer(object):
-    def __init__(self, code, uuid, status, gzs_objectid, gprcode, config):
+    def __init__(self, code, uuid, status, gzs_objectid, gprcode, config, logger):
         self.config = config
         self.code = code
         self.gprcode = gprcode
@@ -20,7 +20,7 @@ class Layer(object):
         self.gdbm_status = status
         self.gzs_objectid = gzs_objectid
         
-        self.logger = self.config['LOGGING']['logger']
+        self.logger = logger
 
         self.validation_messages = []
         self.valuetables = []
@@ -89,11 +89,11 @@ class Layer(object):
                 attribute_name = unicode(xpatheval("gmd:name/gco:CharacterString/text()")[0])
                 valuetables = xpatheval("gmd:namedType/gmd:MD_CodeDomain")
                 for valuetable in valuetables:
-                    self.valuetables.append(DDSync.Valuetable.Valuetable(valuetable, attribute_name, self.ezs_objectid, self.config))
+                    self.valuetables.append(DDSync.Valuetable.Valuetable(valuetable, attribute_name, self.ezs_objectid, self.config, self.logger))
       
     def __get_legends(self, legends_xml):
         for legend in legends_xml:
-            self.legends.append(DDSync.Legend.Legend(legend, self.ezs_objectid, self.config))
+            self.legends.append(DDSync.Legend.Legend(legend, self.ezs_objectid, self.config, self.logger))
             
     def __get_standard_legends(self):
         # Nur wenn es überhaupt eine Legende hat, wird sie ausgewählt.

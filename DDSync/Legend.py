@@ -5,12 +5,12 @@ import DDSync.helpers.sql_helper
 from DDSync.helpers.sql_helper import clean
 
 class Legend(object):
-    def __init__(self, legend_xml, ezs_objectid, config):
+    def __init__(self, legend_xml, ezs_objectid, config, logger):
         self.config = config
         self.xml = legend_xml
         self.ezs_objectid = ezs_objectid
         
-        self.logger = self.config['LOGGING']['logger']
+        self.logger = logger
         
         self.sql_statements = []
         
