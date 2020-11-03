@@ -218,11 +218,11 @@ class Geoproduct(object):
         
         if self.code not in DDSync.helpers.sql_helper.get_syncable_codes_from_gdbp(self.config, self.nextwippe):
             is_valid = False
-            self.validation_messages.append("Das Geoprodukt " + self.code + " ist in GeoDBProzess nicht für den Import freigegeben!")
+            self.validation_messages.append("Das Geoprodukt " + self.code + " ist in GeoDBProzess nicht fuer den Import freigegeben!")
         
         if self.uuid == "":
             is_valid = False
-            self.validation_messages.append("Für das Geoprodukt " + self.code + " konnte in GeoDBProzess keine UUID ermittelt werden!")
+            self.validation_messages.append("Fuer das Geoprodukt " + self.code + " konnte in GeoDBProzess keine UUID ermittelt werden!")
             
         if self.gdbm_status != "Published":
             is_valid = False
@@ -230,11 +230,11 @@ class Geoproduct(object):
             
         if self.gdbm_versionid == "":
             is_valid = False
-            self.validation_messages.append("Für das Geoprodukt " + self.code + " (" + self.uuid + ") konnte in GeoDBmeta keine ObjectversionID gefunden werden.!")
+            self.validation_messages.append("Fuer das Geoprodukt " + self.code + " (" + self.uuid + ") konnte in GeoDBmeta keine ObjectversionID gefunden werden.!")
             
         if self.xml == "".encode('utf-8'):
             is_valid = False
-            self.validation_messages.append("Für das Geoprodukt " + self.code + " (" + self.uuid + ") konnte aus GeoDBmeta kein XML heruntergeladen werden!")
+            self.validation_messages.append("Fuer das Geoprodukt " + self.code + " (" + self.uuid + ") konnte aus GeoDBmeta kein XML heruntergeladen werden!")
             
         if self.checkskript is True:
             if DDSync.helpers.check_helper.run_checkscript_normierung(self.config, self.code, self.jahr, self.version) == False:

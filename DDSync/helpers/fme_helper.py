@@ -43,8 +43,8 @@ def fme_runner(logger):
         runner.runWithParameters(str(fme_path), parameters)
         pass
     except fmeobjects.FMEException as ex:
-        logger.error("FME-Workbench " + fme_script + " konnte nicht ausgeführt werden!")
+        logger.error("FME-Workbench " + fme_script + " konnte nicht ausgefuehrt werden!")
         logger.error(ex)
         sys.exit()
 
-    logger.info("Script " +  fme_script + " ausgeführt.")
+    logger.info("Script " +  fme_script + " ausgefuehrt.")

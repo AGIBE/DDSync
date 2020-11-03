@@ -200,7 +200,7 @@ class Layer(object):
         
         if self.uuid == "":
             is_valid = False
-            self.validation_messages.append("Für die Ebene " + self.code + " konnte in GeoDBProzess keine UUID ermittelt werden!")
+            self.validation_messages.append("Fuer die Ebene " + self.code + " konnte in GeoDBProzess keine UUID ermittelt werden!")
             
         if self.gdbm_status <> "Published":
             is_valid = False
@@ -208,7 +208,7 @@ class Layer(object):
             
         if self.xml == "".encode('utf-8'):
             is_valid = False
-            self.validation_messages.append("Für die Ebene " + self.code + " (" + self.uuid + ") konnte aus GeoDBmeta kein XML heruntergeladen werden!")
+            self.validation_messages.append("Fuer die Ebene " + self.code + " (" + self.uuid + ") konnte aus GeoDBmeta kein XML heruntergeladen werden!")
             
         return is_valid
     

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function, unicode_literals
 import DDSync.helpers.crypto_helper
-import DDSync.helpers.log_helper
 import configobj
 import os
 from DDSync.__init__ import __version__        
@@ -72,10 +71,6 @@ def create_connection_string_pg(config, key):
 
 # Config wird immer eingelesen
 config = init_generalconfig()
-  
-#logger_dd = DDSync.helpers.log_helper.init_logging(config)
-#logger_dd.info('Konfiguration wird eingelesen.')
-#logger_dd.info('Logfile: ' + config['LOGGING']['logfile'])
 
 # Connection-Strings zusammensetzen
 create_connection_string(config, 'GDBP')

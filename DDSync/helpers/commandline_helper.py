@@ -21,7 +21,7 @@ def list_geoproducts(args):
         for sync_gpr in syncable_gpr:
             print(sync_gpr)
     else:
-        config['LOGGING']['logger'].warn("Es wurden keine Geoprodukte gefunden, die synchronisiert werden können.")
+        print("Es wurden keine Geoprodukte gefunden, die synchronisiert werden koennen.")
     
     return syncable_gpr
 
