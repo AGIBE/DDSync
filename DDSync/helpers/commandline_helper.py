@@ -78,6 +78,7 @@ def syncall_geoproduct(args):
     logger.info('Von ' + str(len(allgp)) + ' Geoprodukten wurden ' + str(cnt) + ' erfolgreich synchronisiert.')
     # Ausgabe für SyncServ
     logger.info('SUCCESSFUL')
+    al.destroy_agilogger()
     print("SUCCESSFUL")
 
 def drysync_geoproduct(args):
