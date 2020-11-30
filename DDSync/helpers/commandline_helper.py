@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function, unicode_literals
 import argparse
+import sys
 from DDSync import __version__
 import DDSync.Geoproduct
 import DDSync.helpers.sql_helper
@@ -41,6 +42,11 @@ def sync_geoproduct(args):
     gpr.write_sql_to_dd()
     # Erstellen des Tasks im DataDictionary
     fme_helper.fme_runner(logger)
+    # Ausgabe für SyncServ
+    logger.info('SUCCESSFUL')
+    al.destroy_agilogger()
+    print("SUCCESSFUL")
+    sys.exit(0)
 
 def syncall_geoproduct(args):
     # liste alle Geoprodukte auf
@@ -80,6 +86,7 @@ def syncall_geoproduct(args):
     logger.info('SUCCESSFUL')
     al.destroy_agilogger()
     print("SUCCESSFUL")
+    sys.exit(0)
 
 def drysync_geoproduct(args):
     config = DDSync.helpers.config_helper.config
