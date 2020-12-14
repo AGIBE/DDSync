@@ -13,7 +13,7 @@ def list_geoproducts(args):
     config = DDSync.helpers.config_helper.config
     syncable_gpr = []
 
-    for gpr in DDSync.helpers.sql_helper.get_syncable_codes_from_gdbp(config, True):
+    for gpr in DDSync.helpers.sql_helper.get_syncable_codes_from_gdbp(config, args.nextwippe):
         uuid = DDSync.helpers.sql_helper.get_uuid(config, gpr)
         if not DDSync.helpers.sql_helper.uuid_exists_in_dd(config, uuid):
             syncable_gpr.append(gpr)
@@ -53,7 +53,7 @@ def syncall_geoproduct(args):
     allgp = list_geoproducts(args)
     cnt = 0
     config = DDSync.helpers.config_helper.config
-    nextwippe = True
+    nextwippe = args.nextwippe
 
     log_dir = config['LOGGING']['basedir']
     logfile_name = 'DDSync.log'
@@ -132,6 +132,7 @@ def main():
     
     # LIST-Befehl
     list_parser = subparsers.add_parser('list', help='zeigt alle in GeoDBprozess freigegebenen Geoprodukte an.')
+    list_parser.add_argument("-w", "--nextwippe", default=True, help="Soll geprüft werden, ob GP auf der nächsten Wippe ist? Default: True")
     list_parser.set_defaults(func=list_geoproducts)
     
     # SYNC-Befehl
@@ -142,8 +143,9 @@ def main():
     sync_parser.set_defaults(func=sync_geoproduct)
     
     # SYNCALL-Befehl
-    sync_parser = subparsers.add_parser('syncall', help='synchronisiert das angegebene Geoprodukt in das DataDictionary.')
-    sync_parser.set_defaults(func=syncall_geoproduct)
+    syncall_parser = subparsers.add_parser('syncall', help='synchronisiert das angegebene Geoprodukt in das DataDictionary.')
+    syncall_parser.add_argument("-w", "--nextwippe", default=True, help="Soll geprüft werden, ob GP auf der nächsten Wippe ist? Default: True")
+    syncall_parser.set_defaults(func=syncall_geoproduct)
     
     # DRYSYNC-Befehl
     drysync_parser = subparsers.add_parser('drysync', help='Gibt nur die SQL-Statements aus, schreibt aber nichts ins DataDicionary.')
