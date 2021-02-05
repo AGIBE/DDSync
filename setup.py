@@ -13,7 +13,7 @@ setup(
       package_data={'': ["*.fmw"]},
       package_dir = {"": "src"},
       # Abhängigkeiten
-      install_requires = ["configobj==5.0.6", "cx-Oracle>=5.1.3", "requests>=2.20.0", "PyMySQL==0.7.4", "lxml==3.4.4", "python-keyczar==0.715", "psycopg2>=2.7.3.1"],
+      install_requires = ["configobj==5.0.6", "cx-Oracle>=5.1.3", "requests>=2.20.0", "PyMySQL==0.7.4", "lxml==4.6.2", "python-keyczar==0.715", "psycopg2>=2.7.3.1"],
       # PyPI metadata
       author = "Peter Schär",
       author_email = "peter.schaer@bve.be.ch",
