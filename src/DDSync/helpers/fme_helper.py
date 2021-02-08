@@ -25,24 +25,24 @@ def fme_runner(logger):
     fme_path = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..')) + "\\" + fme_script
 
     parameters = {
-        'database_work': str(config['GDBP']['database']),
-        'pw_gpdb': str(config['GDBP']['password']),
-        'User_gdbp': str(config['GDBP']['username']),
-        'database_team': str(config['DD']['database']),
-        'PW_geodb_dd': str(config['DD']['password']),
-        'User_geodb_dd': str(config['DD']['username']),
-        'OEREB_GPR': str(oereb_gpr),
-        'OEREB_DATABASE': str(config['POSTGRESQL']['database']),
-        'OEREB_USERNAME': str(config['POSTGRESQL']['username']),
-        'OEREB_PASSWORD': str(config['POSTGRESQL']['password']),
-        'OEREB_PORT': str(config['POSTGRESQL']['port']),
-        'OEREB_HOST': str(config['POSTGRESQL']['host']),
+        'database_work': (config['GDBP']['database']),
+        'pw_gpdb': (config['GDBP']['password']),
+        'User_gdbp': (config['GDBP']['username']),
+        'database_team': (config['DD']['database']),
+        'PW_geodb_dd': (config['DD']['password']),
+        'User_geodb_dd': (config['DD']['username']),
+        'OEREB_GPR': (oereb_gpr),
+        'OEREB_DATABASE': (config['POSTGRESQL']['database']),
+        'OEREB_USERNAME': (config['POSTGRESQL']['username']),
+        'OEREB_PASSWORD': (config['POSTGRESQL']['password']),
+        'OEREB_PORT': (config['POSTGRESQL']['port']),
+        'OEREB_HOST': (config['POSTGRESQL']['host']),
     }
 
     logger.info("Script " + fme_path + " wird ausgeführt.")
     logger.info("Das FME-Logfile heisst: " + fme_script_logfile)
 
-    fme_runner = AGILib.FMERunner(fme_workbench=fme_script, fme_workbench_parameters=parameters, fme_logfile=fme_script_logfile, fme_logfile_archive=True)
+    fme_runner = AGILib.FMERunner(fme_workbench=fme_path, fme_workbench_parameters=parameters, fme_logfile=fme_script_logfile, fme_logfile_archive=True)
     fme_runner.run()         
     if fme_runner.returncode != 0:
         logger.error("FME-Script %s abgebrochen." % (fme_script))
