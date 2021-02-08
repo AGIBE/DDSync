@@ -35,7 +35,7 @@ def get_general_configfile_from_envvar():
     der Konfigurationsdatei zurück.
     '''
     config_directory = os.environ['DDSYNCHOME']
-    config_filename = "config.ini"
+    config_filename = "config_dij.ini"
     
     config_file = os.path.join(config_directory, config_filename)
     
