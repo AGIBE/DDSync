@@ -152,12 +152,15 @@ def main():
     drysync_parser = subparsers.add_parser('drysync', help='Gibt nur die SQL-Statements aus, schreibt aber nichts ins DataDicionary.')
     drysync_parser.add_argument("GEOPRODUKT", help="Geoprodukt-Code.")
     drysync_parser.add_argument("-f", "--file", help="Output-Datei für die SQL-Statements.")
+    drysync_parser.add_argument("-c", "--check", default=True, help="Soll Checkskript Normierung ausgeführt werden? Default: True")
+    drysync_parser.add_argument("-w", "--nextwippe", default=True, help="Soll geprüft werden, ob GP auf der nächsten Wippe ist? Default: True")
     drysync_parser.set_defaults(func=drysync_geoproduct)
     
     # DRYSYNCALL-Befehl
-    drysync_parser = subparsers.add_parser('drysyncall', help='Gibt nur die SQL-Statements aus, schreibt aber nichts ins DataDicionary.')
-    drysync_parser.add_argument("-f", "--file", help="Output-Datei für die SQL-Statements.")
-    drysync_parser.set_defaults(func=drysyncall_geoproduct)
+    drysyncall_parser = subparsers.add_parser('drysyncall', help='Gibt nur die SQL-Statements aus, schreibt aber nichts ins DataDicionary.')
+    drysyncall_parser.add_argument("-f", "--file", help="Output-Datei für die SQL-Statements.")
+    drysyncall_parser.add_argument("-w", "--nextwippe", default=True, help="Soll geprüft werden, ob GP auf der nächsten Wippe ist? Default: True")
+    drysyncall_parser.set_defaults(func=drysyncall_geoproduct)
     
     args = parser.parse_args()
     args.func(args)
